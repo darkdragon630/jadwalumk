@@ -295,50 +295,70 @@ async function processUpload() {
     setProgress(30, 'Mengirim ke Gemini AI...');
 
     // 3. Kirim ke Gemini
-    const PROMPT = `Kamu adalah parser jadwal kuliah mahasiswa dari Universitas Muria Kudus (UMK).
+    const PROMPT = `Kamu adalah parser jadwal kuliah dari Universitas Muria Kudus (UMK). Tugasmu membaca tabel jadwal di PDF ini dan mengembalikan JSON.
 
-Baca PDF ini dengan SANGAT TELITI. Baca setiap baris tabel SATU PER SATU dari atas ke bawah, JANGAN ada yang terlewat dan JANGAN mengarang data yang tidak ada di PDF.
+== STRUKTUR TABEL DI PDF ==
+Tabel jadwal UMK memiliki kolom dengan urutan dari KIRI ke KANAN:
+No | Kls | Kode MK | Nama Matakuliah | Dosen | SKS | Sn | Sl | Rb | Km | Jm | Sb | Mg
 
-Kembalikan HANYA JSON murni (tanpa markdown, tanpa backtick, tanpa komentar) dengan struktur berikut:
+Keterangan kolom hari:
+- Kolom ke-7  = Sn = SENIN
+- Kolom ke-8  = Sl = SELASA  
+- Kolom ke-9  = Rb = RABU
+- Kolom ke-10 = Km = KAMIS
+- Kolom ke-11 = Jm = JUMAT
+- Kolom ke-12 = Sb = SABTU
+- Kolom ke-13 = Mg = MINGGU
+
+Isi kolom hari berformat: JAM_MULAI - JAM_SELESAI (KODE_RUANG)
+Contoh: 08.00 - 09.39 (J.4,11) artinya jam="08:00-09:39", ruang="J.4,11"
+Kolom hari yang kosong (strip/tidak ada isi) = null
+
+== LANGKAH MEMBACA ==
+Untuk setiap baris di tabel:
+1. Catat nomor urut, kelas, kode MK, nama MK, dosen, SKS
+2. Cek kolom Sn — ada isi? → isi jam & ruang. Kosong? → null
+3. Cek kolom Sl — ada isi? → isi jam & ruang. Kosong? → null
+4. Ulangi untuk Rb, Km, Jm, Sb, Mg
+5. PENTING: jangan tukarkan hari satu sama lain
+
+== OUTPUT ==
+Kembalikan HANYA JSON murni, tanpa markdown, tanpa backtick:
 
 {
   "mahasiswa": {
-    "nama": "nama lengkap mahasiswa persis dari PDF",
-    "nim": "NIM persis dari PDF",
-    "prodi": "program studi persis dari PDF",
-    "dosenPA": "nama dosen PA persis dari PDF",
-    "sks": <total beban SKS angka>,
-    "semester": "semester persis dari PDF"
+    "nama": "persis dari PDF",
+    "nim": "persis dari PDF",
+    "prodi": "persis dari PDF",
+    "dosenPA": "persis dari PDF",
+    "sks": <angka>,
+    "semester": "persis dari PDF"
   },
   "matakuliah": [
     {
-      "no": <nomor urut angka>,
-      "kelas": "huruf kelas persis dari PDF",
-      "kode": "kode matakuliah persis dari PDF",
-      "nama": "nama matakuliah persis dari PDF",
-      "isPraktikum": <true jika nama mengandung kata Praktikum, selainnya false>,
-      "dosen": "nama lengkap dosen persis dari PDF",
-      "sks": <jumlah SKS angka persis dari PDF>,
+      "no": <angka>,
+      "kelas": "huruf kelas",
+      "kode": "kode MK",
+      "nama": "nama matakuliah",
+      "isPraktikum": <true/false>,
+      "dosen": "nama dosen",
+      "sks": <angka>,
       "jadwal": {
-        "sn": <null JIKA kolom Senin kosong, ATAU {"jam":"HH:MM-HH:MM","ruang":"kode ruang"} persis dari PDF>,
-        "sl": <null atau {"jam":"...","ruang":"..."}>,
-        "rb": <null atau {"jam":"...","ruang":"..."}>,
-        "km": <null atau {"jam":"...","ruang":"..."}>,
-        "jm": <null atau {"jam":"...","ruang":"..."}>,
-        "sb": <null atau {"jam":"...","ruang":"..."}>,
-        "mg": <null atau {"jam":"...","ruang":"..."}>
+        "sn": null,
+        "sl": {"jam": "08:00-09:39", "ruang": "J.4,11"},
+        "rb": null,
+        "km": null,
+        "jm": null,
+        "sb": null,
+        "mg": null
       }
     }
   ],
-  "dicetak": "tanggal dan waktu cetak persis dari PDF jika ada"
+  "dicetak": "tanggal cetak dari PDF"
 }
 
-ATURAN WAJIB:
-1. Baca jadwal dari KOLOM HARI di tabel (Sn/Sl/Rb/Km/Jm/Sb/Mg).
-2. Kolom kosong/strip = null.
-3. Format jam dan kode ruang PERSIS dari PDF, jangan diubah.
-4. Jumlah baris matakuliah HARUS SAMA PERSIS dengan tabel di PDF.
-5. Kembalikan HANYA JSON.`;
+WAJIB: Jumlah objek di array matakuliah harus SAMA PERSIS dengan jumlah baris di tabel PDF.
+WAJIB: Kembalikan HANYA JSON. Tidak ada teks lain.`;
 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
     const response = await fetch(apiUrl, {
