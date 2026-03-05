@@ -1,3 +1,12 @@
+<?php
+require_once __DIR__ . '/config/database.php';
+
+// Ambil status API key dari DB
+$db = getDB();
+$keyRow   = $db->query("SELECT `value` FROM settings WHERE `key`='gemini_api_key'")->fetch();
+$hasKey   = (bool)$keyRow;
+$geminiKey = $keyRow['value'] ?? '';
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -21,34 +30,27 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 .top-text p { font-size:12px; color:var(--muted); margin-top:2px; }
 .back-link { margin-left:auto; font-size:12px; font-weight:600; color:var(--muted); text-decoration:none; display:flex; align-items:center; gap:5px; }
 .back-link:hover { color:var(--navy); }
-
-/* FREE BADGE */
-.badge-free { display:inline-flex; align-items:center; gap:6px; background:#edfaf3; border:1px solid #a0e0c0; color:#0d5c32; font-size:11px; font-weight:700; padding:5px 12px; border-radius:20px; margin-bottom:20px; }
-
-/* API KEY */
+.badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; padding:5px 12px; border-radius:20px; margin-bottom:20px; }
+.badge.green { background:#edfaf3; border:1px solid #a0e0c0; color:#0d5c32; }
+.badge.blue  { background:#e8f0fe; border:1px solid #aac4ff; color:#1a3a8f; }
 .api-section { margin-bottom:18px; }
 .api-label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:7px; display:flex; align-items:center; justify-content:space-between; }
-.api-label a { font-size:11px; font-weight:700; color:#1a73e8; text-decoration:none; text-transform:none; letter-spacing:0; display:flex; align-items:center; gap:4px; }
+.api-label a { font-size:11px; font-weight:700; color:#1a73e8; text-decoration:none; text-transform:none; letter-spacing:0; }
 .api-label a:hover { text-decoration:underline; }
 .api-input-wrap { display:flex; gap:8px; }
 .api-input { flex:1; padding:11px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; color:var(--text); background:var(--bg); outline:none; transition:border .2s; }
 .api-input:focus { border-color:var(--gold); background:var(--white); }
 .api-input.saved { border-color:#a0e0c0; background:#f0fdf7; }
-.api-save-btn { padding:11px 16px; background:var(--navy); color:#fff; border:none; border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; transition:background .2s; }
+.api-save-btn { padding:11px 16px; background:var(--navy); color:#fff; border:none; border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
 .api-save-btn:hover { background:#1a3260; }
 .api-status { font-size:11px; margin-top:6px; min-height:16px; }
 .api-status.ok { color:var(--green); }
 .api-status.err { color:var(--red); }
-
-/* HOW TO GET KEY */
-.get-key-hint { background:#f0f5ff; border:1px solid #c8d8ff; border-radius:10px; padding:12px 14px; margin-bottom:18px; font-size:12px; color:#1a3a8f; line-height:1.7; }
-.get-key-hint strong { display:block; margin-bottom:4px; font-size:12.5px; }
-.get-key-hint ol { padding-left:16px; }
-
+.hint { background:#f0f5ff; border:1px solid #c8d8ff; border-radius:10px; padding:12px 14px; margin-bottom:18px; font-size:12px; color:#1a3a8f; line-height:1.7; }
+.hint strong { display:block; margin-bottom:4px; }
+.hint ol { padding-left:16px; }
 .divider { border:none; border-top:1px solid var(--border); margin:18px 0; }
-
-/* DROP ZONE */
-.drop-zone { border:2px dashed var(--border); border-radius:16px; padding:36px 24px; text-align:center; cursor:pointer; transition:all .2s; background:var(--bg); position:relative; }
+.drop-zone { border:2px dashed var(--border); border-radius:16px; padding:36px 24px; text-align:center; cursor:pointer; background:var(--bg); position:relative; transition:all .2s; }
 .drop-zone.drag { border-color:var(--gold); background:#fdf8ee; }
 .drop-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
 .dz-icon { width:48px; height:48px; background:var(--navy); border-radius:13px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
@@ -61,7 +63,6 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 .fp-name { font-size:13px; font-weight:700; color:var(--text); }
 .fp-size { font-size:11px; color:var(--muted); margin-top:2px; }
 .fp-remove { margin-left:auto; background:none; border:none; cursor:pointer; color:var(--muted); padding:4px; }
-.fp-remove:hover { color:var(--red); }
 .btn { width:100%; padding:15px; border-radius:12px; border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:700; background:var(--navy); color:#fff; margin-top:18px; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px; }
 .btn:hover:not(:disabled) { background:#1a3260; transform:translateY(-1px); box-shadow:0 6px 20px rgba(13,31,60,.2); }
 .btn:disabled { opacity:.5; cursor:not-allowed; }
@@ -94,54 +95,66 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
       <h1>Upload Jadwal Baru</h1>
       <p>Universitas Muria Kudus — Fakultas Teknik</p>
     </div>
-    <a href="index.html" class="back-link">
+    <a href="index.php" class="back-link">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Kembali
     </a>
   </div>
 
-  <div class="badge-free">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-    Gratis · Google Gemini API · 1500 request/hari
+  <?php if ($hasKey): ?>
+  <div class="badge green">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    API key tersimpan di server — siap dipakai
   </div>
+  <?php else: ?>
+  <div class="badge blue">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Set API key Gemini — cukup sekali, tersimpan di server
+  </div>
+  <?php endif; ?>
 
-  <!-- API KEY INPUT -->
-  <div class="api-section">
+  <!-- API KEY — hanya tampil jika belum ada -->
+  <div class="api-section" id="apiSection" <?= $hasKey ? 'style="display:none"' : '' ?>>
     <div class="api-label">
       Google Gemini API Key
-      <a href="https://aistudio.google.com/app/apikey" target="_blank">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        Dapatkan gratis →
-      </a>
+      <a href="https://aistudio.google.com/app/apikey" target="_blank">Dapatkan gratis →</a>
     </div>
     <div class="api-input-wrap">
       <input type="password" id="apiKeyInput" class="api-input" placeholder="AIzaSy..." autocomplete="off" />
       <button class="api-save-btn" onclick="saveApiKey()">Simpan</button>
     </div>
     <div class="api-status" id="apiStatus"></div>
+    <div class="hint" id="keyHint">
+      <strong>🔑 Cara dapat API key gratis:</strong>
+      <ol>
+        <li>Klik <b>"Dapatkan gratis →"</b> di atas</li>
+        <li>Login dengan akun Google personal (Gmail)</li>
+        <li>Klik <b>"Create API key"</b></li>
+        <li>Copy key → paste di sini → Simpan</li>
+      </ol>
+    </div>
   </div>
-
-  <!-- HOW TO GET -->
-  <div class="get-key-hint" id="keyHint">
-    <strong>🔑 Cara dapat API key gratis:</strong>
-    <ol>
-      <li>Klik <b>"Dapatkan gratis →"</b> di atas</li>
-      <li>Login dengan akun Google</li>
-      <li>Klik <b>"Create API key"</b></li>
-      <li>Copy key → paste di sini → Simpan</li>
-    </ol>
+  <?php if ($hasKey): ?>
+  <p style="font-size:11px;color:var(--muted);margin-bottom:16px;">
+    <a href="#" onclick="document.getElementById('changeKeySection').style.display='block';this.style.display='none';return false;" style="color:var(--muted);">Ganti API key</a>
+  </p>
+  <div id="changeKeySection" style="display:none;margin-bottom:18px;">
+    <div class="api-input-wrap">
+      <input type="password" id="apiKeyInput" class="api-input" placeholder="AIzaSy..." autocomplete="off" />
+      <button class="api-save-btn" onclick="saveApiKey()">Simpan</button>
+    </div>
+    <div class="api-status" id="apiStatus"></div>
   </div>
+  <?php endif; ?>
 
   <hr class="divider">
 
-  <!-- STEPS -->
   <div class="steps">
     <div class="step active" id="s1"><div class="step-circle">1</div><div class="step-label">Pilih PDF</div></div>
     <div class="step" id="s2"><div class="step-circle">2</div><div class="step-label">AI Baca</div></div>
-    <div class="step" id="s3"><div class="step-circle">3</div><div class="step-label">Selesai</div></div>
+    <div class="step" id="s3"><div class="step-circle">3</div><div class="step-label">Tersimpan</div></div>
   </div>
 
-  <!-- DROP ZONE -->
   <div style="margin-top:20px">
     <div class="drop-zone" id="dropZone">
       <input type="file" id="fileInput" accept=".pdf" />
@@ -163,61 +176,50 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
   </div>
 
   <div class="progress-wrap" id="progressWrap">
-    <div class="progress-label"><span id="progressLabel">Memuat...</span><span id="progressPct">0%</span></div>
+    <div class="progress-label"><span id="progressLabel">Memproses...</span><span id="progressPct">0%</span></div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
   </div>
   <div class="status-box" id="statusBox"></div>
 
   <button class="btn" id="uploadBtn" disabled onclick="processUpload()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    Proses &amp; Tampilkan Jadwal
+    Proses &amp; Simpan Jadwal
   </button>
 </div>
 
 <script>
-// Gemini 2.0 Flash — gratis, support PDF langsung
+const HAS_KEY = <?= $hasKey ? 'true' : 'false' ?>;
 const GEMINI_MODEL = 'gemini-2.5-flash';
-
 let selectedFile = null;
 
-// ── Load saved API key ──
-const apiInput = document.getElementById('apiKeyInput');
-const savedKey = localStorage.getItem('gemini_api_key') || '';
-if (savedKey) {
-  apiInput.value = savedKey;
-  apiInput.classList.add('saved');
-  setApiStatus('ok', '✓ API key tersimpan');
-  document.getElementById('keyHint').style.display = 'none';
-  updateBtn();
-}
-
-function saveApiKey() {
-  const key = apiInput.value.trim();
+// ── API Key ──
+async function saveApiKey() {
+  const inp = document.getElementById('apiKeyInput');
+  const key = (inp ? inp.value.trim() : '');
   if (!key.startsWith('AIza')) {
-    setApiStatus('err', '✗ Format tidak valid (harus diawali AIza...)');
-    return;
+    setApiStatus('err', '✗ Format tidak valid (harus diawali AIza...)'); return;
   }
-  localStorage.setItem('gemini_api_key', key);
-  apiInput.classList.add('saved');
-  setApiStatus('ok', '✓ Tersimpan di browser');
-  document.getElementById('keyHint').style.display = 'none';
-  updateBtn();
+  const r = await fetch('api/jadwal.php?action=save_key', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({key})
+  });
+  const d = await r.json();
+  if (d.success) {
+    setApiStatus('ok', '✓ API key tersimpan di server');
+    document.getElementById('apiSection') && (document.getElementById('apiSection').style.display='none');
+    document.getElementById('changeKeySection') && (document.getElementById('changeKeySection').style.display='none');
+    updateBtn(true);
+  } else {
+    setApiStatus('err', '✗ ' + d.error);
+  }
 }
-
 function setApiStatus(type, msg) {
   const el = document.getElementById('apiStatus');
-  el.className = 'api-status ' + type;
-  el.textContent = msg;
+  if (!el) return;
+  el.className = 'api-status ' + type; el.textContent = msg;
 }
 
-apiInput.addEventListener('input', () => {
-  apiInput.classList.remove('saved');
-  document.getElementById('apiStatus').textContent = '';
-  updateBtn();
-});
-apiInput.addEventListener('keydown', e => { if (e.key === 'Enter') saveApiKey(); });
-
-// ── File handlers ──
+// ── File ──
 const dz = document.getElementById('dropZone');
 const fi = document.getElementById('fileInput');
 dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
@@ -239,13 +241,13 @@ function setFile(f) {
   clearStatus(); setStep(1); updateBtn();
 }
 function clearFile() {
-  selectedFile = null; fi.value = '';
+  selectedFile = null; fi.value='';
   document.getElementById('filePreview').classList.remove('show');
   clearStatus(); setStep(0); updateBtn();
 }
-function updateBtn() {
-  const key = localStorage.getItem('gemini_api_key') || apiInput.value.trim();
-  document.getElementById('uploadBtn').disabled = !(selectedFile && key.startsWith('AIza'));
+function updateBtn(keyOk) {
+  const ok = (keyOk !== undefined) ? keyOk : HAS_KEY;
+  document.getElementById('uploadBtn').disabled = !(selectedFile && ok);
 }
 function setStep(n) {
   [1,2,3].forEach(i => {
@@ -259,10 +261,7 @@ function showStatus(type, msg) {
   const el = document.getElementById('statusBox');
   el.className = 'status-box show '+type; el.innerHTML = msg;
 }
-function clearStatus() {
-  const el = document.getElementById('statusBox');
-  el.className = 'status-box'; el.innerHTML = '';
-}
+function clearStatus() { document.getElementById('statusBox').className = 'status-box'; }
 function setProgress(pct, label) {
   document.getElementById('progressWrap').classList.add('show');
   document.getElementById('progressFill').style.width = pct+'%';
@@ -271,121 +270,133 @@ function setProgress(pct, label) {
 }
 function hideProgress() { document.getElementById('progressWrap').classList.remove('show'); }
 
-// ════════════════════════════
-//  MAIN
-// ════════════════════════════
+// ── Init button ──
+updateBtn();
+
+// ══════════════════════════════
+//  MAIN: kirim PDF ke Gemini, simpan ke DB
+// ══════════════════════════════
 async function processUpload() {
   if (!selectedFile) return;
-  const apiKey = localStorage.getItem('gemini_api_key') || apiInput.value.trim();
-  if (!apiKey.startsWith('AIza')) { showStatus('error', 'Simpan API key Gemini terlebih dahulu.'); return; }
 
   const btn = document.getElementById('uploadBtn');
   btn.disabled = true; clearStatus(); setStep(2);
   setProgress(10, 'Membaca PDF...');
 
   try {
+    // 1. Ambil API key dari server
+    const keyRes = await fetch('api/jadwal.php?action=get_key');
+    const keyData = await keyRes.json();
+    if (!keyData.success) throw new Error('API key belum diset. Masukkan API key Gemini terlebih dahulu.');
+    const apiKey = keyData.key;
+
+    // 2. Convert PDF ke base64
     const base64 = await fileToBase64(selectedFile);
     setProgress(30, 'Mengirim ke Gemini AI...');
 
-    const PROMPT = `Kamu adalah parser jadwal kuliah mahasiswa Indonesia. Ekstrak semua data dari PDF jadwal kuliah ini dan kembalikan HANYA JSON murni tanpa markdown, tanpa komentar, tanpa tanda backtick.
+    // 3. Kirim ke Gemini
+    const PROMPT = `Kamu adalah parser jadwal kuliah mahasiswa dari Universitas Muria Kudus (UMK).
 
-Format JSON yang harus dikembalikan:
+Baca PDF ini dengan SANGAT TELITI. Baca setiap baris tabel SATU PER SATU dari atas ke bawah, JANGAN ada yang terlewat dan JANGAN mengarang data yang tidak ada di PDF.
+
+Kembalikan HANYA JSON murni (tanpa markdown, tanpa backtick, tanpa komentar) dengan struktur berikut:
+
 {
   "mahasiswa": {
-    "nama": "...", "nim": "...", "prodi": "...",
-    "dosenPA": "...", "sks": 24, "semester": "..."
+    "nama": "nama lengkap mahasiswa persis dari PDF",
+    "nim": "NIM persis dari PDF",
+    "prodi": "program studi persis dari PDF",
+    "dosenPA": "nama dosen PA persis dari PDF",
+    "sks": <total beban SKS angka>,
+    "semester": "semester persis dari PDF"
   },
   "matakuliah": [
     {
-      "no": 1, "kelas": "A", "kode": "IFT406",
-      "nama": "Nama Matakuliah", "isPraktikum": false,
-      "dosen": "Nama Dosen", "sks": 2,
+      "no": <nomor urut angka>,
+      "kelas": "huruf kelas persis dari PDF",
+      "kode": "kode matakuliah persis dari PDF",
+      "nama": "nama matakuliah persis dari PDF",
+      "isPraktikum": <true jika nama mengandung kata Praktikum, selainnya false>,
+      "dosen": "nama lengkap dosen persis dari PDF",
+      "sks": <jumlah SKS angka persis dari PDF>,
       "jadwal": {
-        "sn": null, "sl": null,
-        "rb": { "jam": "08:00-09:39", "ruang": "J.4,11" },
-        "km": null, "jm": null, "sb": null, "mg": null
+        "sn": <null JIKA kolom Senin kosong, ATAU {"jam":"HH:MM-HH:MM","ruang":"kode ruang"} persis dari PDF>,
+        "sl": <null atau {"jam":"...","ruang":"..."}>,
+        "rb": <null atau {"jam":"...","ruang":"..."}>,
+        "km": <null atau {"jam":"...","ruang":"..."}>,
+        "jm": <null atau {"jam":"...","ruang":"..."}>,
+        "sb": <null atau {"jam":"...","ruang":"..."}>,
+        "mg": <null atau {"jam":"...","ruang":"..."}>
       }
     }
   ],
-  "dicetak": "tanggal cetak jika ada"
+  "dicetak": "tanggal dan waktu cetak persis dari PDF jika ada"
 }
 
-Aturan:
-- sn=Senin, sl=Selasa, rb=Rabu, km=Kamis, jm=Jumat, sb=Sabtu, mg=Minggu
-- Hari tanpa jadwal nilainya null
-- isPraktikum = true jika nama matakuliah mengandung kata "Praktikum"
-- Kembalikan HANYA JSON, tidak ada teks lain`;
+ATURAN WAJIB:
+1. Baca jadwal dari KOLOM HARI di tabel (Sn/Sl/Rb/Km/Jm/Sb/Mg).
+2. Kolom kosong/strip = null.
+3. Format jam dan kode ruang PERSIS dari PDF, jangan diubah.
+4. Jumlah baris matakuliah HARUS SAMA PERSIS dengan tabel di PDF.
+5. Kembalikan HANYA JSON.`;
 
-    // Gemini API — support PDF langsung via inline_data
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{
-          parts: [
-            {
-              inline_data: {
-                mime_type: 'application/pdf',
-                data: base64,
-              }
-            },
-            { text: PROMPT }
-          ]
-        }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 4000,
-        }
+        contents: [{ parts: [
+          { inline_data: { mime_type: 'application/pdf', data: base64 } },
+          { text: PROMPT }
+        ]}],
+        generationConfig: { temperature: 0, maxOutputTokens: 8000 }
       })
     });
 
-    setProgress(75, 'Memproses respons AI...');
+    setProgress(70, 'Memproses respons AI...');
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       const msg = err.error?.message || `HTTP ${response.status}`;
-      // Cek jika API key salah
-      if (response.status === 400 || response.status === 403) {
-        throw new Error(`API key tidak valid atau belum aktif. Pesan: ${msg}`);
+      if (msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED')) {
+        throw new Error('Quota Gemini habis. Coba lagi besok atau gunakan API key lain.');
       }
       throw new Error(msg);
     }
 
     const data = await response.json();
     let raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    raw = raw.trim()
-      .replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```$/i,'').trim();
+    raw = raw.trim().replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```$/i,'').trim();
 
-    setProgress(88, 'Memvalidasi data jadwal...');
+    setProgress(82, 'Menyimpan ke database...');
 
     let parsed;
     try { parsed = JSON.parse(raw); }
-    catch {
-      const m = raw.match(/\{[\s\S]*\}/);
-      parsed = m ? JSON.parse(m[0]) : null;
-    }
+    catch { const m = raw.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : null; }
 
     if (!parsed?.mahasiswa || !Array.isArray(parsed?.matakuliah)) {
-      throw new Error('Struktur data tidak valid. Coba upload ulang PDF jadwal.');
-    }
-    if (!parsed.dicetak) {
-      parsed.dicetak = new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+      throw new Error('Struktur data AI tidak valid. Coba upload ulang.');
     }
 
-    setProgress(100, 'Menyimpan...');
-    localStorage.setItem('jadwal_data', JSON.stringify(parsed));
+    // 4. Simpan ke database via API PHP
+    const saveRes = await fetch('api/jadwal.php?action=save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(parsed)
+    });
+    const saveData = await saveRes.json();
+    if (!saveData.success) throw new Error('Gagal simpan ke database: ' + saveData.error);
 
+    setProgress(100, 'Selesai!');
     setStep(3);
     showStatus('ok', `
-      <strong>✓ Berhasil!</strong> <strong>${parsed.matakuliah.length} matakuliah</strong> terdeteksi<br>
-      <b>${parsed.mahasiswa.nama}</b> · ${parsed.mahasiswa.semester}<br>
-      <span style="color:#555;font-size:12px">Mengalihkan dalam 2 detik...</span>
+      <strong>✓ Jadwal tersimpan ke server!</strong><br>
+      <b>${parsed.matakuliah.length} matakuliah</b> · <b>${parsed.mahasiswa.nama}</b><br>
+      Semester: ${parsed.mahasiswa.semester}<br>
+      <span style="color:#555;font-size:12px">Bisa dibuka dari device manapun. Mengalihkan...</span>
     `);
-    btn.classList.add('success');
-    btn.innerHTML = '✓ Berhasil — Mengalihkan...';
-    setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+    btn.classList.add('success'); btn.innerHTML = '✓ Berhasil — Mengalihkan...';
+    setTimeout(() => { window.location.href = 'index.php'; }, 2200);
 
   } catch(err) {
     hideProgress(); setStep(1);

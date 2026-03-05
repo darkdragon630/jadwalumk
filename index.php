@@ -236,7 +236,7 @@ function render(data) {
       <div class="header-right">
         <div class="sem-label">Semester</div>
         <div class="sem-value">${m.semester}</div>
-        <a href="upload.html" class="upload-btn">
+        <a href="upload.php" class="upload-btn">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Upload Jadwal Baru
         </a>
@@ -293,13 +293,17 @@ function render(data) {
   `;
 }
 
-// Load data: localStorage first, then default
-let data = DEFAULT_DATA;
-try {
-  const saved = localStorage.getItem('jadwal_data');
-  if (saved) data = JSON.parse(saved);
-} catch(e) {}
-render(data);
+// Load data dari server
+async function loadData() {
+  let data = DEFAULT_DATA;
+  try {
+    const res = await fetch('api/jadwal.php?action=get');
+    const result = await res.json();
+    if (result.success && result.data) data = result.data;
+  } catch(e) {}
+  render(data);
+}
+loadData();
 </script>
 </body>
 </html>
