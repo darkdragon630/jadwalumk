@@ -293,14 +293,17 @@ function render(data) {
   `;
 }
 
-// Load data dari server
+// Load data dari server (tersimpan sebagai JS object)
 async function loadData() {
   let data = DEFAULT_DATA;
   try {
-    const res = await fetch('api/jadwal.php?action=get');
+    const res = await fetch('api/jadwal.php?action=get_data');
     const result = await res.json();
-    if (result.success && result.data) data = result.data;
-  } catch(e) {}
+    if (result.success && result.data) {
+      // eval the JS object string yang disimpan Gemini
+      data = (new Function('return (' + result.data + ')'))();
+    }
+  } catch(e) { console.error('loadData error:', e); }
   render(data);
 }
 loadData();

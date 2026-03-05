@@ -294,71 +294,41 @@ async function processUpload() {
     const base64 = await fileToBase64(selectedFile);
     setProgress(30, 'Mengirim ke Gemini AI...');
 
-    // 3. Kirim ke Gemini
-    const PROMPT = `Kamu adalah parser jadwal kuliah dari Universitas Muria Kudus (UMK). Tugasmu membaca tabel jadwal di PDF ini dan mengembalikan JSON.
-
-== STRUKTUR TABEL DI PDF ==
-Tabel jadwal UMK memiliki kolom dengan urutan dari KIRI ke KANAN:
-No | Kls | Kode MK | Nama Matakuliah | Dosen | SKS | Sn | Sl | Rb | Km | Jm | Sb | Mg
-
-Keterangan kolom hari:
-- Kolom ke-7  = Sn = SENIN
-- Kolom ke-8  = Sl = SELASA  
-- Kolom ke-9  = Rb = RABU
-- Kolom ke-10 = Km = KAMIS
-- Kolom ke-11 = Jm = JUMAT
-- Kolom ke-12 = Sb = SABTU
-- Kolom ke-13 = Mg = MINGGU
-
-Isi kolom hari berformat: JAM_MULAI - JAM_SELESAI (KODE_RUANG)
-Contoh: 08.00 - 09.39 (J.4,11) artinya jam="08:00-09:39", ruang="J.4,11"
-Kolom hari yang kosong (strip/tidak ada isi) = null
-
-== LANGKAH MEMBACA ==
-Untuk setiap baris di tabel:
-1. Catat nomor urut, kelas, kode MK, nama MK, dosen, SKS
-2. Cek kolom Sn — ada isi? → isi jam & ruang. Kosong? → null
-3. Cek kolom Sl — ada isi? → isi jam & ruang. Kosong? → null
-4. Ulangi untuk Rb, Km, Jm, Sb, Mg
-5. PENTING: jangan tukarkan hari satu sama lain
-
-== OUTPUT ==
-Kembalikan HANYA JSON murni, tanpa markdown, tanpa backtick:
-
-{
-  "mahasiswa": {
-    "nama": "persis dari PDF",
-    "nim": "persis dari PDF",
-    "prodi": "persis dari PDF",
-    "dosenPA": "persis dari PDF",
-    "sks": <angka>,
-    "semester": "persis dari PDF"
+    // 3. Prompt: minta Gemini output JS object persis format DEFAULT_DATA
+    // Kirim contoh data yang sudah benar (semester 4) sebagai referensi format
+    const EXAMPLE = `{
+  mahasiswa: {
+    nama: "Muhammad Burhanudin Syaifullah Azmi",
+    nim: "202451022",
+    prodi: "Teknik Informatika – S1",
+    dosenPA: "Ahmad Jazuli, S.Kom., M.Kom",
+    sks: 24,
+    semester: "Genap 2025/2026"
   },
-  "matakuliah": [
-    {
-      "no": <angka>,
-      "kelas": "huruf kelas",
-      "kode": "kode MK",
-      "nama": "nama matakuliah",
-      "isPraktikum": <true/false>,
-      "dosen": "nama dosen",
-      "sks": <angka>,
-      "jadwal": {
-        "sn": null,
-        "sl": {"jam": "08:00-09:39", "ruang": "J.4,11"},
-        "rb": null,
-        "km": null,
-        "jm": null,
-        "sb": null,
-        "mg": null
-      }
-    }
+  matakuliah: [
+    { no:1, kelas:"E", kode:"IFT406", nama:"Praktikum Pemrograman Mobile", isPraktikum:true,  dosen:"Aditya Akbar Riadis, Kom., M.Kom.", sks:1, jadwal:{sn:null,sl:null,rb:null,km:null,jm:{jam:"08:00–10:29",ruang:"I.3,04"},sb:null,mg:null} },
+    { no:2, kelas:"A", kode:"IFT408", nama:"Pengenalan Pola",              isPraktikum:false, dosen:"Endang Supriyatis, Kom, M.Kom",      sks:2, jadwal:{sn:null,sl:null,rb:{jam:"08:00–09:39",ruang:"J.4,11"},km:null,jm:null,sb:null,mg:null} },
   ],
-  "dicetak": "tanggal cetak dari PDF"
-}
+  dicetak: "05 Maret 2026, 09.05"
+}`;
 
-WAJIB: Jumlah objek di array matakuliah harus SAMA PERSIS dengan jumlah baris di tabel PDF.
-WAJIB: Kembalikan HANYA JSON. Tidak ada teks lain.`;
+    const PROMPT = `Kamu membaca PDF jadwal kuliah dari Universitas Muria Kudus (UMK).
+
+TUGASMU: Baca PDF ini dan kembalikan data jadwal dalam format JavaScript object PERSIS seperti contoh di bawah. JANGAN tambahkan "const DATA =" atau apapun — kembalikan HANYA isi object-nya mulai dari { hingga }.
+
+CONTOH FORMAT OUTPUT (ini hanya contoh struktur, bukan datanya):
+${EXAMPLE}
+
+ATURAN MEMBACA TABEL:
+Kolom tabel dari kiri ke kanan: No | Kls | Kode | Nama MK | Dosen | SKS | Sn | Sl | Rb | Km | Jm | Sb | Mg
+- Sn = Senin, Sl = Selasa, Rb = Rabu, Km = Kamis, Jm = Jumat, Sb = Sabtu, Mg = Minggu
+- Kolom hari berisi jam dan ruang, contoh "08.00-09.39 (J.4,11)" → jam:"08:00-09:39", ruang:"J.4,11"
+- Kolom hari KOSONG → null
+- Gunakan tanda "–" (en dash) untuk pemisah jam, bukan "-" (hyphen)
+- isPraktikum: true hanya jika nama mengandung kata "Praktikum"
+- Salin SEMUA baris tabel, tidak boleh ada yang terlewat
+
+WAJIB: Output HANYA JavaScript object literal (mulai { sampai }). Tidak ada teks lain, tidak ada markdown.`;
 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
     const response = await fetch(apiUrl, {
@@ -384,25 +354,34 @@ WAJIB: Kembalikan HANYA JSON. Tidak ada teks lain.`;
       throw new Error(msg);
     }
 
-    const data = await response.json();
-    let raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    raw = raw.trim().replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```$/i,'').trim();
+    const aiResp = await response.json();
+    let raw = aiResp.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    // Bersihkan markdown jika ada
+    raw = raw.trim()
+      .replace(/^```javascript\s*/i,'').replace(/^```js\s*/i,'')
+      .replace(/^```\s*/i,'').replace(/\s*```$/i,'')
+      .replace(/^const\s+\w+\s*=\s*/,'')  // hapus "const DATA = "
+      .trim();
 
-    setProgress(82, 'Menyimpan ke database...');
+    setProgress(82, 'Memvalidasi & menyimpan...');
 
+    // Validasi: coba eval dulu
     let parsed;
-    try { parsed = JSON.parse(raw); }
-    catch { const m = raw.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : null; }
-
-    if (!parsed?.mahasiswa || !Array.isArray(parsed?.matakuliah)) {
-      throw new Error('Struktur data AI tidak valid. Coba upload ulang.');
+    try {
+      parsed = (new Function('return (' + raw + ')'))();
+    } catch(e) {
+      throw new Error('Format output AI tidak valid. Detail: ' + e.message + '\n\nOutput AI:\n' + raw.slice(0, 300));
     }
 
-    // 4. Simpan ke database via API PHP
-    const saveRes = await fetch('api/jadwal.php?action=save', {
+    if (!parsed?.mahasiswa || !Array.isArray(parsed?.matakuliah) || parsed.matakuliah.length === 0) {
+      throw new Error('Data jadwal kosong atau tidak valid. Coba upload ulang PDF.');
+    }
+
+    // Simpan raw JS object string ke DB (bukan JSON, tapi JS literal)
+    const saveRes = await fetch('api/jadwal.php?action=save_data', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(parsed)
+      body: JSON.stringify({ data: raw })
     });
     const saveData = await saveRes.json();
     if (!saveData.success) throw new Error('Gagal simpan ke database: ' + saveData.error);
