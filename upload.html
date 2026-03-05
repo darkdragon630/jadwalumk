@@ -14,13 +14,13 @@
   --text:#1a2540; --muted:#7a84a0; --green:#1e7a45; --red:#9c2c2c;
 }
 body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 16px; }
-.card { background:var(--white); border:1px solid var(--border); border-radius:24px; padding:48px 44px; max-width:520px; width:100%; box-shadow:0 8px 48px rgba(13,31,60,.10); animation:up .45s ease both; }
+.card { background:var(--white); border:1px solid var(--border); border-radius:24px; padding:48px 44px; max-width:560px; width:100%; box-shadow:0 8px 48px rgba(13,31,60,.10); animation:up .45s ease both; }
 @keyframes up { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
 .top { display:flex; align-items:center; gap:14px; margin-bottom:20px; }
 .logo { width:46px; height:46px; background:var(--navy); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:var(--gold); flex-shrink:0; }
 .top-text h1 { font-size:17px; font-weight:800; color:var(--navy); }
 .top-text p { font-size:12px; color:var(--muted); margin-top:2px; }
-.back-link { margin-left:auto; font-size:12px; font-weight:600; color:var(--muted); text-decoration:none; display:flex; align-items:center; gap:5px; transition:color .2s; }
+.back-link { margin-left:auto; font-size:12px; font-weight:600; color:var(--muted); text-decoration:none; display:flex; align-items:center; gap:5px; }
 .back-link:hover { color:var(--navy); }
 .badge-free { display:inline-flex; align-items:center; gap:5px; background:#edfaf3; border:1px solid #a0e0c0; color:#0d5c32; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; margin-bottom:18px; }
 .drop-zone { border:2px dashed var(--border); border-radius:16px; padding:40px 24px; text-align:center; cursor:pointer; transition:all .2s; background:var(--bg); position:relative; }
@@ -35,11 +35,11 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 .fp-icon { width:36px; height:36px; background:var(--navy); border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .fp-name { font-size:13px; font-weight:700; color:var(--text); }
 .fp-size { font-size:11px; color:var(--muted); margin-top:2px; }
-.fp-remove { margin-left:auto; background:none; border:none; cursor:pointer; color:var(--muted); transition:color .2s; padding:4px; }
+.fp-remove { margin-left:auto; background:none; border:none; cursor:pointer; color:var(--muted); padding:4px; }
 .fp-remove:hover { color:var(--red); }
 .btn { width:100%; padding:15px; border-radius:12px; border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:700; background:var(--navy); color:#fff; margin-top:20px; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px; }
 .btn:hover:not(:disabled) { background:#1a3260; transform:translateY(-1px); box-shadow:0 6px 20px rgba(13,31,60,.2); }
-.btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
 .btn.success { background:var(--green); }
 .status-box { display:none; margin-top:18px; border-radius:12px; padding:16px 18px; font-size:13px; line-height:1.6; }
 .status-box.show { display:block; }
@@ -59,6 +59,12 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 .step.active .step-circle { background:var(--navy); color:#fff; box-shadow:0 0 0 3px rgba(13,31,60,.15); }
 .step-label { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
 .step.done .step-label, .step.active .step-label { color:var(--text); }
+
+/* Debug box */
+.debug-box { display:none; margin-top:16px; background:#1a1a2e; border-radius:12px; padding:14px 16px; max-height:200px; overflow-y:auto; }
+.debug-box.show { display:block; }
+.debug-box pre { font-size:10px; color:#a0e0c0; font-family:monospace; white-space:pre-wrap; word-break:break-all; }
+.debug-toggle { font-size:11px; color:var(--muted); cursor:pointer; text-decoration:underline; display:inline-block; margin-top:8px; }
 </style>
 </head>
 <body>
@@ -77,7 +83,7 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 
   <div class="badge-free">
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-    Diproses 100% di browser — tanpa server &amp; API key
+    100% di browser — tanpa server &amp; API key
   </div>
 
   <div class="steps">
@@ -110,7 +116,10 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
     <div class="progress-label"><span id="progressLabel">Membaca PDF...</span><span id="progressPct">0%</span></div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
   </div>
+
   <div class="status-box" id="statusBox"></div>
+  <span class="debug-toggle" id="debugToggle" style="display:none" onclick="toggleDebug()">🔍 Lihat teks hasil ekstraksi PDF</span>
+  <div class="debug-box" id="debugBox"><pre id="debugPre"></pre></div>
 
   <button class="btn" id="uploadBtn" disabled onclick="processUpload()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -122,6 +131,7 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 let selectedFile = null;
+let lastExtractedText = '';
 
 const dz = document.getElementById('dropZone');
 const fi = document.getElementById('fileInput');
@@ -149,6 +159,8 @@ function clearFile() {
   document.getElementById('filePreview').classList.remove('show');
   document.getElementById('uploadBtn').disabled = true;
   clearStatus(); setStep(0);
+  document.getElementById('debugToggle').style.display = 'none';
+  document.getElementById('debugBox').classList.remove('show');
 }
 function setStep(n) {
   [1,2,3].forEach(i => {
@@ -173,10 +185,13 @@ function setProgress(pct, label) {
   if (label) document.getElementById('progressLabel').textContent = label;
 }
 function hideProgress() { document.getElementById('progressWrap').classList.remove('show'); }
+function toggleDebug() {
+  document.getElementById('debugBox').classList.toggle('show');
+}
 
-// ═══════════════════════════════════════
+// ══════════════════════════════
 //  MAIN
-// ═══════════════════════════════════════
+// ══════════════════════════════
 async function processUpload() {
   if (!selectedFile) return;
   const btn = document.getElementById('uploadBtn');
@@ -187,43 +202,68 @@ async function processUpload() {
     const arrayBuffer = await selectedFile.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
-    setProgress(35, 'Mengekstrak elemen teks...');
+    setProgress(35, 'Mengekstrak teks...');
 
-    // Kumpulkan semua text items dengan koordinat dari semua halaman
+    // Kumpulkan semua items dengan koordinat dari semua halaman
     let allItems = [];
     for (let p = 1; p <= pdf.numPages; p++) {
-      const page  = await pdf.getPage(p);
-      const vp    = page.getViewport({ scale: 1 });
-      const tc    = await page.getTextContent();
+      const page = await pdf.getPage(p);
+      const vp   = page.getViewport({ scale: 1 });
+      const tc   = await page.getTextContent();
       tc.items.forEach(item => {
-        if (!item.str.trim()) return;
+        const t = item.str.trim();
+        if (!t) return;
         allItems.push({
-          text: item.str.trim(),
+          t,
           x: Math.round(item.transform[4]),
-          // Flip Y: PDF Y=0 is bottom, kita invert jadi atas=0
-          y: Math.round(vp.height - item.transform[5]),
-          w: Math.round(item.width),
-          h: Math.round(item.height),
+          y: Math.round(vp.height - item.transform[5]), // flip Y
         });
       });
     }
 
-    setProgress(55, 'Menganalisis struktur tabel...');
-    const result = parseUMKJadwal(allItems);
+    // Sort: atas ke bawah, kiri ke kanan
+    allItems.sort((a,b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
 
+    // Kelompokkan ke baris (Y tolerance 5px)
+    const rows = [];
+    for (const item of allItems) {
+      const last = rows[rows.length - 1];
+      if (last && Math.abs(item.y - last.y) <= 5) {
+        last.cells.push(item);
+        last.y = Math.round((last.y * last.cells.length + item.y) / (last.cells.length + 1));
+      } else {
+        rows.push({ y: item.y, cells: [item] });
+      }
+    }
+    rows.forEach(r => r.cells.sort((a,b) => a.x - b.x));
+
+    // Teks per baris (untuk debug & header parsing)
+    const lineTexts = rows.map(r => r.cells.map(c => c.t).join(' '));
+    lastExtractedText = lineTexts.join('\n');
+
+    // Tampilkan debug toggle
+    document.getElementById('debugPre').textContent = lastExtractedText;
+    document.getElementById('debugToggle').style.display = 'inline-block';
+
+    setProgress(55, 'Mencari data jadwal...');
+
+    const result = parseJadwal(rows, lineTexts);
     if (!result || result.matakuliah.length === 0) {
-      throw new Error('Gagal membaca tabel jadwal. Pastikan PDF adalah jadwal kuliah dari Kanal UMK (format standar).');
+      throw new Error(
+        'Tabel jadwal tidak terdeteksi.\n' +
+        'Coba klik "Lihat teks hasil ekstraksi PDF" di bawah untuk cek apakah teks PDF terbaca.\n' +
+        'Jika kosong, PDF kemungkinan berupa scan gambar (bukan teks).'
+      );
     }
 
-    setProgress(85, 'Menyimpan data...');
+    setProgress(90, 'Menyimpan...');
     localStorage.setItem('jadwal_data', JSON.stringify(result));
 
     setProgress(100, 'Selesai!');
     setStep(3);
     showStatus('ok', `
-      <strong>✓ Jadwal berhasil dibaca!</strong><br>
-      <strong>${result.matakuliah.length} matakuliah</strong> · <strong>${result.mahasiswa.nama}</strong><br>
-      Semester: ${result.mahasiswa.semester} · SKS: ${result.mahasiswa.sks}<br>
+      <strong>✓ Berhasil!</strong> Ditemukan <strong>${result.matakuliah.length} matakuliah</strong><br>
+      <b>${result.mahasiswa.nama}</b> · ${result.mahasiswa.semester}<br>
       <span style="color:#555;font-size:12px">Mengalihkan dalam 2 detik...</span>
     `);
     btn.classList.add('success');
@@ -232,200 +272,159 @@ async function processUpload() {
 
   } catch(err) {
     hideProgress(); setStep(1);
-    showStatus('error', `<strong>Gagal memproses PDF.</strong><br>${err.message}`);
+    showStatus('error', `<strong>Gagal.</strong><br>${err.message}`);
     btn.disabled = false;
   }
 }
 
-// ═══════════════════════════════════════
-//  PARSER KOORDINAT
-// ═══════════════════════════════════════
-function parseUMKJadwal(items) {
+// ══════════════════════════════
+//  PARSER
+// ══════════════════════════════
+function parseJadwal(rows, lineTexts) {
+  const joined = lineTexts.join(' ');
 
-  // ── 1. Kelompokkan item ke dalam baris (Y yang berdekatan = baris sama) ──
-  const Y_THRESH = 6; // px tolerance
-  const rows = [];
-  const sortedByY = [...items].sort((a,b) => a.y - b.y || a.x - b.x);
+  // ── Info mahasiswa ──
+  const get = (re) => { const m = joined.match(re); return m ? (m[1]||m[0]).replace(/\s+/g,' ').trim() : ''; };
+  const nama     = get(/Nama\s*[:\-]\s*([A-Z][A-Z\s]+?)(?=\s*(?:Dosen|NIM|$))/i);
+  const nim      = get(/NIM\s*[:\-]\s*(\d{8,12})/i);
+  const prodi    = get(/Program Studi\s*[:\-]\s*(.+?)(?=\s*(?:Dosen|Semester|NIM|\d{2}\/\d{2}))/i);
+  const dosenPA  = get(/Dosen\s*Pa\s*[:\-]\s*(.+?)(?=\s*(?:Semester|Beban|$))/i);
+  const semester = get(/Semester\s*[:\-]\s*(.+?)(?=\s*(?:Beban|NIM|Dosen|\d{2}\/\d{2}))/i);
+  const sksTotal = parseInt(get(/Beban\s*SKS\s*[:\-]\s*(\d+)/i)) || 0;
+  const dicetak  = get(/(\d{2}\/\d{2}\/\d{2,4}[,\s]+\d{2}[.:]\d{2})/);
 
-  for (const item of sortedByY) {
-    const lastRow = rows[rows.length - 1];
-    if (lastRow && Math.abs(item.y - lastRow.y) <= Y_THRESH) {
-      lastRow.items.push(item);
-    } else {
-      rows.push({ y: item.y, items: [item] });
-    }
-  }
+  // ── Cari header tabel: baris yang ada "Kode" dan "Nama" ──
+  let headerIdx = lineTexts.findIndex(t => /\bKode\b/i.test(t) && /\bNama\b/i.test(t));
+  if (headerIdx < 0) headerIdx = lineTexts.findIndex(t => /\bKode\b/i.test(t));
+  if (headerIdx < 0) return null;
 
-  // Untuk setiap baris, sort item berdasarkan X
-  rows.forEach(r => r.items.sort((a,b) => a.x - b.x));
-
-  // ── 2. Gabungkan teks per baris ──
-  const textRows = rows.map(r => ({
-    y: r.y,
-    text: r.items.map(i => i.str || i.text).join(' ').trim(),
-    items: r.items,
-  }));
-
-  // ── 3. Ekstrak info mahasiswa dari baris-baris header ──
-  const fullText = textRows.map(r => r.text).join('\n');
-
-  const nama     = findVal(fullText, /Nama\s*:\s*(.+?)(?=\n|Dosen|NIM)/i);
-  const nim      = findVal(fullText, /NIM\s*:\s*(\d+)/i);
-  const prodi    = findVal(fullText, /Program Studi\s*:\s*(.+?)(?=\n|Dosen|Semester)/i);
-  const dosenPA  = findVal(fullText, /Dosen Pa\s*:\s*(.+?)(?=\n|Semester)/i);
-  const semester = findVal(fullText, /Semester\s*:\s*(.+?)(?=\n|Beban)/i);
-  const sksRaw   = findVal(fullText, /Beban SKS\s*:\s*(\d+)/i);
-  const dicetak  = findVal(fullText, /(\d{2}\/\d{2}\/\d{2,4}[,\s]+\d{2}[.:]\d{2})/);
-
-  // ── 4. Temukan baris header tabel (mengandung "Kode" dan "Nama") ──
-  const headerRowIdx = textRows.findIndex(r =>
-    /\bkode\b/i.test(r.text) && /\bnama\b/i.test(r.text)
-  );
-  if (headerRowIdx < 0) return null;
-
-  // Ambil kolom X dari header row untuk menentukan batas kolom
-  const headerRow = rows[headerRowIdx];
-  // Header items: No, Kelas, Kode, Nama, Dosen, SKS, Sn, Sl, Rb, Km, Jm, Sb, Mg
-  // Cari X posisi hari-hari dari header row sebelumnya (row yang ada Sn Sl Rb...)
-  const dayHeaderIdx = textRows.findIndex(r =>
-    /\bSn\b/.test(r.text) && /\bSl\b/.test(r.text) && /\bRb\b/.test(r.text)
-  );
-
-  // Posisi X dari kolom hari (dari header row)
+  // ── Cari baris header hari (Sn Sl Rb...) untuk tahu posisi X tiap hari ──
   const DAY_KEYS = ['sn','sl','rb','km','jm','sb','mg'];
   const DAY_ABBR = ['Sn','Sl','Rb','Km','Jm','Sb','Mg'];
-  let dayXMap = {}; // key -> center X
+  let dayXPos = {}; // key -> x position
 
-  if (dayHeaderIdx >= 0) {
-    const dhr = rows[dayHeaderIdx];
-    DAY_ABBR.forEach((abbr, i) => {
-      const it = dhr.items.find(it => (it.str || it.text).trim() === abbr);
-      if (it) dayXMap[DAY_KEYS[i]] = it.x;
-    });
-  }
-
-  // Fallback: estimasi posisi X hari dari seluruh dokumen
-  if (Object.keys(dayXMap).length < 3) {
-    DAY_ABBR.forEach((abbr, i) => {
-      const it = items.find(it => (it.str || it.text).trim() === abbr);
-      if (it) dayXMap[DAY_KEYS[i]] = it.x;
-    });
-  }
-
-  // ── 5. Parse baris-baris tabel setelah header ──
-  // Setiap baris matakuliah dimulai dengan angka (nomor urut)
-  const tableStartY = textRows[headerRowIdx].y;
-  const tableItems  = items.filter(it => it.y > tableStartY + 5);
-
-  // Kelompokkan ulang item tabel ke dalam baris (dengan Y_THRESH lebih longgar untuk sel tabel)
-  const TABLE_Y_THRESH = 8;
-  const tableRows = [];
-  const tSorted = [...tableItems].sort((a,b) => a.y - b.y || a.x - b.x);
-  for (const item of tSorted) {
-    const last = tableRows[tableRows.length - 1];
-    if (last && Math.abs(item.y - last.y) <= TABLE_Y_THRESH) {
-      last.items.push(item);
-    } else {
-      tableRows.push({ y: item.y, items: [item] });
-    }
-  }
-  tableRows.forEach(r => r.items.sort((a,b) => a.x - b.x));
-
-  // Cluster baris menjadi "grup baris" per matakuliah
-  // Setiap matakuliah bisa span beberapa baris teks (nama panjang, dosen panjang)
-  // Mulai grup baru ketika ada item dengan text = angka di X kecil (kolom No)
-  const NO_X_MAX = 80; // kolom "No." ada di X < 80
-  const mkGroups = [];
-  let currentGroup = null;
-
-  for (const row of tableRows) {
-    const firstItem = row.items[0];
-    const firstText = (firstItem?.str || firstItem?.text || '').trim();
-    const isNewRow = /^\d+$/.test(firstText) && firstItem.x < NO_X_MAX;
-
-    if (isNewRow) {
-      currentGroup = { rows: [row] };
-      mkGroups.push(currentGroup);
-    } else if (currentGroup) {
-      currentGroup.rows.push(row);
+  // Cari dari semua rows
+  for (const row of rows) {
+    const rowText = row.cells.map(c => c.t).join(' ');
+    if (DAY_ABBR.some(d => rowText.includes(d))) {
+      row.cells.forEach(c => {
+        const idx = DAY_ABBR.indexOf(c.t.trim());
+        if (idx >= 0) dayXPos[DAY_KEYS[idx]] = c.x;
+      });
     }
   }
 
-  // ── 6. Ekstrak data setiap matakuliah dari grupnya ──
+  // ── Ambil semua cells di bawah header tabel ──
+  const headerY = rows[headerIdx]?.y || 0;
+  const tableRows = rows.filter(r => r.y > headerY + 3);
+
+  // ── Kelompokkan ke matakuliah berdasarkan kode (IFTxxx / TITxxx) ──
+  // Strategi: cari setiap cell yang berisi kode MK, lalu ambil semua cells
+  // dari baris itu dan beberapa baris berikutnya sampai kode MK berikutnya
+
+  // Temukan index baris yang mengandung kode MK
+  const mkCodePattern = /^[A-Z]{2,4}\d{3,4}$/;
+  const mkRowIndices = [];
+  tableRows.forEach((row, i) => {
+    if (row.cells.some(c => mkCodePattern.test(c.t))) {
+      mkRowIndices.push(i);
+    }
+  });
+
+  if (mkRowIndices.length === 0) return null;
+
   const matakuliah = [];
 
-  // Tentukan batas X per kolom (estimasi dari posisi item)
-  // Kolom: No(~30), Kelas(~70), Kode(~100), Nama(~160), Dosen(~310), SKS(~450), Sn(~490), Sl(~530), Rb(~570), Km(~610), Jm(~650), Sb(~690), Mg(~730)
-  // Gunakan dayXMap jika tersedia, jika tidak gunakan estimasi
-  const dayBounds = buildDayBounds(dayXMap, items);
+  mkRowIndices.forEach((startIdx, mi) => {
+    const endIdx = mi + 1 < mkRowIndices.length ? mkRowIndices[mi + 1] : tableRows.length;
+    // Kumpulkan semua cells dari grup baris ini
+    const groupRows = tableRows.slice(startIdx, endIdx);
+    const cells = groupRows.flatMap(r => r.cells);
 
-  mkGroups.forEach((group, gi) => {
-    // Flatten semua items dalam grup
-    const gItems = group.rows.flatMap(r => r.items);
+    // Kode MK
+    const kodeCell = cells.find(c => mkCodePattern.test(c.t));
+    if (!kodeCell) return;
+    const kode = kodeCell.t;
 
-    // No urut: item angka di X paling kiri
-    const noItem  = gItems.find(it => /^\d+$/.test((it.str||it.text).trim()) && it.x < NO_X_MAX);
-    const no      = noItem ? parseInt((noItem.str||noItem.text).trim()) : gi+1;
+    // No urut: angka di X paling kiri (sebelum kode)
+    const noCell = cells.find(c => /^\d{1,2}$/.test(c.t) && c.x < kodeCell.x - 20);
+    const no = noCell ? parseInt(noCell.t) : mi + 1;
 
-    // Kelas: huruf A-F setelah no (X sedikit lebih besar)
-    const kelasItem = gItems.find(it => /^[A-F]$/.test((it.str||it.text).trim()) && it.x > NO_X_MAX && it.x < 110);
-    const kelas     = kelasItem ? (kelasItem.str||kelasItem.text).trim() : '?';
+    // Kelas: huruf A-F di antara no dan kode
+    const kelasCell = cells.find(c => /^[A-F]$/.test(c.t) && c.x > (noCell?.x || 0) && c.x < kodeCell.x);
+    const kelas = kelasCell?.t || '?';
 
-    // Kode: pattern IFTxxx / TITxxx
-    const kodeItem  = gItems.find(it => /^[A-Z]{2,4}\d{3,4}$/.test((it.str||it.text).trim()));
-    const kode      = kodeItem ? (kodeItem.str||kodeItem.text).trim() : '';
-    if (!kode) return; // skip baris non-data
+    // SKS: digit 1-6 di area tengah (setelah dosen, sebelum hari)
+    const firstDayX = Math.min(...Object.values(dayXPos).filter(x => x > 0)) || 450;
 
-    // Kode X position → semua item dengan X lebih besar dari kode adalah nama/dosen/sks/jadwal
-    const kodeX = kodeItem.x;
+    // Nama MK: teks antara kode dan dosen (ada di baris sama/bawah kode, X > kode, X < dosen area)
+    // Dosen: teks yang mengandung gelar
+    const GELAR = /S\.Kom|M\.Kom|M\.Cs|S\.T|M\.T|Ph\.D|Dr\./i;
+    const namaCells = [];
+    const dosenCells = [];
+    const sksCells = [];
+    const jadwalCells = [];
 
-    // Nama MK: teks antara kode dan dosen (X > kodeX, X < midpoint)
-    // Dosen: mengandung gelar akademik
-    const dosenPattern = /S\.Kom|M\.Kom|M\.Cs|S\.T\.|M\.T\.|Ph\.D|Dr\./i;
-    const namaItems  = [];
-    const dosenItems = [];
-    const sksArea    = [];
-    const jadwalArea = [];
+    // Tentukan batas: kolom dosen kira-kira mulai dimana?
+    // Dari PDF UMK, kolom Dosen biasanya X > 230
+    // Kolom SKS X > 390
+    // Kolom jadwal X > firstDayX - 30
+    cells.forEach(c => {
+      if (c === kodeCell || c === noCell || c === kelasCell) return;
+      if (c.x <= kodeCell.x) return;
 
-    // Tentukan batas kolom dari dayBounds
-    const firstDayX = dayBounds.length > 0 ? dayBounds[0].x - 20 : 460;
-
-    gItems.forEach(it => {
-      const t = (it.str||it.text).trim();
-      if (!t || it === kodeItem || it === noItem || it === kelasItem) return;
-      if (it.x <= kodeX) return; // skip kolom sebelum kode
-
-      if (it.x >= firstDayX) {
-        jadwalArea.push(it);
-      } else if (/^\d$/.test(t) && it.x > firstDayX - 80) {
-        sksArea.push(it);
-      } else if (dosenPattern.test(t) || (dosenItems.length > 0 && it.x < firstDayX - 60)) {
-        dosenItems.push(it);
-      } else if (namaItems.length === 0 || it.x < firstDayX - 60) {
-        if (!dosenPattern.test(t)) namaItems.push(it);
-        else dosenItems.push(it);
+      if (c.x >= firstDayX - 10) {
+        jadwalCells.push(c);
+      } else if (/^[1-6]$/.test(c.t) && c.x > firstDayX - 100) {
+        sksCells.push(c);
+      } else if (GELAR.test(c.t)) {
+        dosenCells.push(c);
+      } else if (dosenCells.length > 0) {
+        // sudah masuk area dosen
+        dosenCells.push(c);
+      } else {
+        namaCells.push(c);
       }
     });
 
-    // Gabungkan nama (sorted by X then Y)
-    const nama = namaItems
-      .sort((a,b) => a.y - b.y || a.x - b.x)
-      .map(it => (it.str||it.text).trim())
-      .join(' ').replace(/\s+/g,' ').trim();
-
-    // Gabungkan dosen
-    const dosen = dosenItems
-      .sort((a,b) => a.y - b.y || a.x - b.x)
-      .map(it => (it.str||it.text).trim())
-      .join(' ').replace(/\s+/g,' ').trim();
-
-    // SKS
-    const sksItem = sksArea.find(it => /^[1-6]$/.test((it.str||it.text).trim()));
-    const sks = sksItem ? parseInt((sksItem.str||sksItem.text).trim()) : 2;
-
-    // Parse jadwal dari jadwalArea
-    const jadwal = extractJadwal(jadwalArea, dayBounds);
+    const nama = namaCells.map(c => c.t).join(' ').replace(/\s+/g,' ').trim();
+    const dosen = dosenCells.map(c => c.t).join(' ').replace(/\s+/g,' ').trim();
+    const sks = sksCells.length > 0 ? parseInt(sksCells[0].t) : 2;
     const isPraktikum = /praktikum/i.test(nama);
+
+    // Parse jadwal dari jadwalCells berdasarkan posisi X
+    const jadwal = { sn:null, sl:null, rb:null, km:null, jm:null, sb:null, mg:null };
+
+    if (Object.keys(dayXPos).length > 0) {
+      // Hitung lebar kolom
+      const dayXValues = Object.values(dayXPos).filter(x => x > 0).sort((a,b)=>a-b);
+      const colW = dayXValues.length > 1
+        ? Math.round((dayXValues[dayXValues.length-1] - dayXValues[0]) / (dayXValues.length - 1))
+        : 50;
+
+      // Kelompokkan jadwalCells ke kolom hari
+      const colTexts = {};
+      DAY_KEYS.forEach(k => colTexts[k] = []);
+
+      jadwalCells.forEach(c => {
+        let best = null, bestDist = Infinity;
+        DAY_KEYS.forEach(k => {
+          if (!dayXPos[k]) return;
+          const d = Math.abs(c.x - dayXPos[k]);
+          if (d < bestDist && d <= colW * 0.8) { bestDist = d; best = k; }
+        });
+        if (best) colTexts[best].push(c.t);
+      });
+
+      DAY_KEYS.forEach(key => {
+        const txt = colTexts[key].join(' ');
+        const times = txt.match(/\d{2}:\d{2}/g);
+        const ruangM = txt.match(/[IJ]\.\d[,\.]\d{2}/);
+        if (times && times.length >= 2) {
+          jadwal[key] = { jam: times[0]+'–'+times[1], ruang: ruangM?.[0] || '' };
+        }
+      });
+    }
 
     matakuliah.push({ no, kelas, kode, nama, isPraktikum, dosen, sks, jadwal });
   });
@@ -434,93 +433,17 @@ function parseUMKJadwal(items) {
 
   return {
     mahasiswa: {
-      nama:    clean(nama    || ''),
-      nim:     clean(nim     || ''),
-      prodi:   clean(prodi   || 'Teknik Informatika – S1'),
-      dosenPA: clean(dosenPA || ''),
-      sks:     sksRaw ? parseInt(sksRaw) : matakuliah.reduce((s,m) => s+m.sks, 0),
-      semester:clean(semester|| ''),
+      nama: nama || '',
+      nim: nim || '',
+      prodi: prodi || 'Teknik Informatika – S1',
+      dosenPA: dosenPA || '',
+      sks: sksTotal || matakuliah.reduce((s,m) => s+m.sks, 0),
+      semester: semester || '',
     },
     matakuliah,
     dicetak: dicetak || new Date().toLocaleDateString('id-ID', {day:'2-digit',month:'long',year:'numeric'}),
   };
 }
-
-function buildDayBounds(dayXMap, allItems) {
-  const DAY_KEYS = ['sn','sl','rb','km','jm','sb','mg'];
-  const DAY_ABBR = ['Sn','Sl','Rb','Km','Jm','Sb','Mg'];
-  const bounds = [];
-
-  DAY_KEYS.forEach((key, i) => {
-    let x = dayXMap[key];
-    if (!x) {
-      // Cari dari semua items
-      const it = allItems.find(it => (it.str||it.text||'').trim() === DAY_ABBR[i]);
-      if (it) x = it.x;
-    }
-    if (x) bounds.push({ key, x });
-  });
-
-  // Sort by X
-  bounds.sort((a,b) => a.x - b.x);
-  return bounds;
-}
-
-function extractJadwal(jadwalItems, dayBounds) {
-  const jadwal = { sn:null, sl:null, rb:null, km:null, jm:null, sb:null, mg:null };
-  if (jadwalItems.length === 0 || dayBounds.length === 0) return jadwal;
-
-  // Tentukan lebar tiap kolom hari
-  const colWidth = dayBounds.length > 1
-    ? Math.round((dayBounds[dayBounds.length-1].x - dayBounds[0].x) / (dayBounds.length - 1))
-    : 45;
-
-  // Untuk setiap item jadwal, cari kolom hari terdekat
-  // Kumpulkan text per kolom
-  const colTexts = {};
-  dayBounds.forEach(b => colTexts[b.key] = []);
-
-  jadwalItems.forEach(it => {
-    const t = (it.str||it.text).trim();
-    if (!t) return;
-    // Cari bound terdekat
-    let closest = null, minDist = Infinity;
-    dayBounds.forEach(b => {
-      const dist = Math.abs(it.x - b.x);
-      if (dist < minDist && dist < colWidth * 0.75) {
-        minDist = dist; closest = b.key;
-      }
-    });
-    if (closest) colTexts[closest].push(t);
-  });
-
-  // Parse setiap kolom: cari waktu dan ruang
-  Object.keys(colTexts).forEach(key => {
-    const texts = colTexts[key];
-    if (texts.length === 0) return;
-    const combined = texts.join(' ');
-
-    // Cari waktu: format 08:00 atau 08:00- atau 10:29
-    const times = combined.match(/\d{2}:\d{2}/g) || [];
-    // Cari ruang: format (I.3,04) atau (J.4,11)
-    const ruangM = combined.match(/\(([^)]+)\)/);
-    const ruang  = ruangM ? ruangM[1] : (combined.match(/[IJ]\.\d,\d{2}/)?.[0] || '');
-
-    if (times.length >= 2) {
-      jadwal[key] = { jam: times[0]+'–'+times[1], ruang };
-    } else if (times.length === 1 && ruang) {
-      jadwal[key] = { jam: times[0], ruang };
-    }
-  });
-
-  return jadwal;
-}
-
-function findVal(text, regex) {
-  const m = text.match(regex);
-  return m ? (m[1]||m[0]).trim() : null;
-}
-function clean(s) { return s.replace(/\s+/g,' ').trim(); }
 </script>
 </body>
 </html>
