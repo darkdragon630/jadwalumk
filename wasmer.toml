@@ -1,0 +1,17 @@
+[package]
+name = "burhanjepara41/jadwalumk"
+version = "0.1.0"
+description = "Jadwal Kuliah UMK – AI PDF Parser"
+
+[[module]]
+name = "server"
+source = "server.js"
+abi = "none"
+
+[[command]]
+name = "server"
+module = "server"
+runner = "winterjs"
+
+[app]
+entrypoint = "server"
