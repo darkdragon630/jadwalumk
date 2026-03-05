@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jadwal Kuliah</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --navy:#0d1f3c; --blue:#1a3a6b; --gold:#d4a030;
+  --bg:#f0f2f7; --white:#ffffff; --border:#e2e6f0;
+  --text:#1a2540; --muted:#7a84a0;
+  --c0:#2563a8; --c1:#16736b; --c2:#7c3d9e; --c3:#b85c00;
+  --c4:#1e7a45; --c5:#9c2c2c; --c6:#3d5fa8; --c7:#5a4a9e; --c8:#0d6b7a;
+}
+body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; }
+.page { max-width:1120px; margin:0 auto; padding:32px 24px 60px; }
+
+/* HEADER */
+.header-card {
+  background:var(--navy); border-radius:20px; padding:30px 36px;
+  display:flex; align-items:center; gap:22px; margin-bottom:18px;
+  position:relative; overflow:hidden;
+}
+.header-card::after {
+  content:''; position:absolute; right:-50px; top:-50px;
+  width:240px; height:240px; border-radius:50%;
+  background:radial-gradient(circle,rgba(212,160,48,.12) 0%,transparent 65%);
+  pointer-events:none;
+}
+.univ-logo {
+  width:52px; height:52px; background:var(--gold); border-radius:13px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:17px; font-weight:800; color:var(--navy); flex-shrink:0;
+}
+.univ-info h1 { font-size:16px; font-weight:700; color:#fff; line-height:1.35; }
+.univ-info p { font-size:11.5px; font-weight:600; color:rgba(212,160,48,.85); margin-top:4px; text-transform:uppercase; letter-spacing:.08em; }
+.header-right { margin-left:auto; text-align:right; }
+.sem-label { font-size:10.5px; font-weight:600; color:rgba(255,255,255,.4); text-transform:uppercase; letter-spacing:.1em; }
+.sem-value { font-size:15px; font-weight:700; color:var(--gold); margin-top:2px; }
+.upload-btn {
+  display:inline-flex; align-items:center; gap:7px;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+  color:#fff; text-decoration:none; font-size:12px; font-weight:600;
+  padding:8px 16px; border-radius:8px; margin-top:10px;
+  transition:background .2s;
+}
+.upload-btn:hover { background:rgba(255,255,255,.18); }
+
+/* INFO */
+.info-grid { display:grid; grid-template-columns:2fr 1fr 1.5fr 1.5fr .7fr; gap:10px; margin-bottom:26px; }
+.info-card { background:var(--white); border:1px solid var(--border); border-radius:13px; padding:15px 18px; }
+.lbl { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:5px; }
+.val { font-size:13.5px; font-weight:700; color:var(--text); line-height:1.3; }
+.info-card.sks-card { background:var(--navy); border-color:var(--navy); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.sks-card .lbl { color:rgba(255,255,255,.4); }
+.sks-card .val { font-size:28px; font-weight:800; color:var(--gold); }
+
+/* SEC HEADER */
+.sec-h { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.sec-h h2 { font-size:14px; font-weight:700; white-space:nowrap; }
+.sec-line { flex:1; height:1px; background:var(--border); }
+.sec-badge { background:var(--navy); color:#fff; font-size:10.5px; font-weight:700; padding:3px 10px; border-radius:20px; }
+
+/* TABLE */
+.tbl-wrap { overflow-x:auto; margin-bottom:28px; border-radius:16px; box-shadow:0 1px 18px rgba(13,31,60,.08); }
+table { width:100%; border-collapse:collapse; background:var(--white); border-radius:16px; overflow:hidden; min-width:840px; }
+thead tr.h1 { background:var(--navy); }
+thead th { color:#fff; font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; white-space:nowrap; padding:13px 14px; text-align:left; border-right:1px solid rgba(255,255,255,.06); }
+thead th:last-child { border-right:none; }
+thead th.tc { text-align:center; }
+thead th.day-th { background:#0f2a56; color:rgba(212,160,48,.85); font-size:10px; text-align:center; padding:13px 6px; }
+thead th.sub-kode, thead th.sub-nama { background:#14264e; font-size:9.5px; color:rgba(255,255,255,.4); font-weight:600; padding:7px 14px; }
+tbody tr { border-bottom:1px solid var(--border); transition:background .12s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:#f5f7fd; }
+tbody td { padding:11px 14px; vertical-align:middle; border-right:1px solid var(--border); font-size:13px; }
+tbody td:last-child { border-right:none; }
+tbody td.tc { text-align:center; }
+.num { color:var(--muted); font-weight:700; font-size:12px; }
+.kls { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:7px; background:var(--navy); color:#fff; font-size:12px; font-weight:700; }
+.kode-tag { font-size:10px; font-weight:700; color:var(--muted); background:var(--bg); border:1px solid var(--border); padding:2px 6px; border-radius:5px; display:inline-block; margin-bottom:3px; letter-spacing:.03em; }
+.mk-name { font-size:13px; font-weight:600; color:var(--text); line-height:1.3; }
+.prak-tag { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--c1); background:#e6f5f3; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:3px; }
+.dosen { font-size:12px; font-weight:500; color:#3a4a6a; line-height:1.4; }
+.sks-num { font-size:17px; font-weight:800; color:var(--gold); display:block; text-align:center; }
+.sched-pill { display:inline-block; border-radius:8px; padding:6px 8px; text-align:center; min-width:76px; }
+.s-time { font-size:11px; font-weight:700; color:#fff; line-height:1.25; }
+.s-room { font-size:9.5px; font-weight:500; color:rgba(255,255,255,.72); margin-top:2px; }
+td.day-td { text-align:center; padding:7px 5px; }
+td.empty { text-align:center; color:#d0d5e5; font-size:14px; }
+
+/* WEEKLY */
+.week-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:32px; }
+.day-col { background:var(--white); border:1px solid var(--border); border-radius:13px; overflow:hidden; }
+.day-head { background:var(--navy); color:#fff; text-align:center; font-size:11px; font-weight:700; padding:10px 6px; text-transform:uppercase; letter-spacing:.06em; }
+.day-body { padding:9px 8px; display:flex; flex-direction:column; gap:7px; min-height:52px; }
+.wk-card { border-radius:9px; padding:9px 10px; }
+.wt { font-size:9.5px; font-weight:600; color:rgba(255,255,255,.65); margin-bottom:3px; }
+.wn { font-size:11.5px; font-weight:700; color:#fff; line-height:1.3; }
+.wr { font-size:9.5px; color:rgba(255,255,255,.62); margin-top:3px; }
+.no-cls { color:var(--muted); font-size:11px; text-align:center; padding:16px 0; font-style:italic; }
+
+/* FOOTER */
+.footer-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-top:20px; border-top:1px solid var(--border); }
+.fl { font-size:12px; color:var(--muted); }
+.fl strong { color:var(--text); }
+.fr { text-align:right; font-size:12px; color:var(--muted); }
+.fr strong { display:block; color:var(--text); font-weight:700; font-size:13px; }
+
+@keyframes up { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+.header-card{animation:up .4s ease both}
+.info-card{animation:up .4s ease both}
+.tbl-wrap{animation:up .4s .18s ease both}
+.day-col{animation:up .35s ease both}
+
+@media(max-width:760px){
+  .info-grid{grid-template-columns:1fr 1fr}
+  .sks-card{grid-column:span 2}
+  .week-grid{grid-template-columns:repeat(3,1fr)}
+  .header-card{flex-wrap:wrap}
+  .header-right{margin-left:0;text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="page" id="app">
+  <div style="text-align:center;padding:80px 0;color:var(--muted)">Memuat data jadwal...</div>
+</div>
+
+<script>
+const COLORS = ['--c0','--c1','--c2','--c3','--c4','--c5','--c6','--c7','--c8'];
+const DAYS_KEY = ['sn','sl','rb','km','jm','sb','mg'];
+const DAYS_LABEL = ['Sn','Sl','Rb','Km','Jm','Sb','Mg'];
+const DAYS_FULL = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+
+const DEFAULT_DATA = {
+  mahasiswa: {
+    nama: "Muhammad Burhanudin Syaifullah Azmi",
+    nim: "202451022",
+    prodi: "Teknik Informatika – S1",
+    dosenPA: "Ahmad Jazuli, S.Kom., M.Kom",
+    sks: 24,
+    semester: "Genap 2025/2026"
+  },
+  matakuliah: [
+    { no:1, kelas:"E", kode:"IFT406", nama:"Praktikum Pemrograman Mobile", isPraktikum:true,  dosen:"Aditya Akbar Riadis, Kom., M.Kom.", sks:1, jadwal:{sn:null,sl:null,rb:null,km:null,jm:{jam:"08:00–10:29",ruang:"I.3,04"},sb:null,mg:null} },
+    { no:2, kelas:"A", kode:"IFT408", nama:"Pengenalan Pola",               isPraktikum:false, dosen:"Endang Supriyatis, Kom, M.Kom",       sks:2, jadwal:{sn:null,sl:null,rb:{jam:"08:00–09:39",ruang:"J.4,11"},km:null,jm:null,sb:null,mg:null} },
+    { no:3, kelas:"B", kode:"IFT410", nama:"Praktikum Pengenalan Pola",     isPraktikum:true,  dosen:"Endang Supriyatis, Kom, M.Kom",       sks:1, jadwal:{sn:{jam:"10:30–12:59",ruang:"I.3,06"},sl:null,rb:null,km:null,jm:null,sb:null,mg:null} },
+    { no:4, kelas:"E", kode:"IFT416", nama:"Sistem Basis Data",             isPraktikum:false, dosen:"Dr. Anastasya Latubessys, Kom., M.Cs",sks:2, jadwal:{sn:null,sl:null,rb:{jam:"09:40–11:19",ruang:"J.4,11"},km:null,jm:null,sb:null,mg:null} },
+    { no:5, kelas:"F", kode:"IFT418", nama:"Praktikum Sistem Basis Data",   isPraktikum:true,  dosen:"Dr. Anastasya Latubessys, Kom., M.Cs",sks:1, jadwal:{sn:null,sl:null,rb:null,km:{jam:"10:30–12:59",ruang:"I.2,02"},jm:null,sb:null,mg:null} },
+    { no:6, kelas:"C", kode:"IFT420", nama:"Manajemen Proyek",              isPraktikum:false, dosen:"Alvin Rainaldy Hakims, Kom., M.Kom.", sks:3, jadwal:{sn:null,sl:null,rb:{jam:"13:00–15:29",ruang:"J.4,10"},km:null,jm:null,sb:null,mg:null} },
+    { no:7, kelas:"A", kode:"TIT302", nama:"Pemrograman Web",               isPraktikum:false, dosen:"Wibowo Harry Sugihartos, Kom., M.Kom.",sks:3,jadwal:{sn:null,sl:{jam:"08:00–10:29",ruang:"J.4,11"},rb:null,km:null,jm:null,sb:null,mg:null} },
+    { no:8, kelas:"C", kode:"IFT414", nama:"Praktikum Pemrograman Web",     isPraktikum:true,  dosen:"Wibowo Harry Sugihartos, Kom., M.Kom.",sks:1,jadwal:{sn:null,sl:null,rb:null,km:null,jm:{jam:"13:00–15:29",ruang:"I.3,03"},sb:null,mg:null} },
+    { no:9, kelas:"F", kode:"IFT404", nama:"Pemrograman Mobile",            isPraktikum:false, dosen:"Aditya Akbar Riadis, Kom., M.Kom.", sks:3, jadwal:{sn:null,sl:null,rb:null,km:{jam:"08:00–10:29",ruang:"J.4,12"},jm:null,sb:null,mg:null} },
+  ],
+  dicetak: "05 Maret 2026, 09.05"
+};
+
+function getColor(idx) {
+  return `var(${COLORS[idx % COLORS.length]})`;
+}
+
+function buildWeekly(mks) {
+  // group by day
+  const days = { sn:[], sl:[], rb:[], km:[], jm:[], sb:[] };
+  mks.forEach((mk, i) => {
+    ['sn','sl','rb','km','jm','sb'].forEach(d => {
+      if (mk.jadwal[d]) days[d].push({ ...mk.jadwal[d], nama: mk.nama, kode: mk.kode, color: getColor(i) });
+    });
+  });
+  // sort each day by time
+  Object.values(days).forEach(arr => arr.sort((a,b) => a.jam.localeCompare(b.jam)));
+  return days;
+}
+
+function render(data) {
+  const m = data.mahasiswa;
+  const mks = data.matakuliah;
+  const weekly = buildWeekly(mks);
+
+  // TABLE ROWS
+  const rows = mks.map((mk, i) => {
+    const color = getColor(i);
+    const dayCells = DAYS_KEY.map(d => {
+      if (mk.jadwal[d]) {
+        return `<td class="day-td"><div class="sched-pill" style="background:${color}"><div class="s-time">${mk.jadwal[d].jam}</div><div class="s-room">${mk.jadwal[d].ruang}</div></div></td>`;
+      }
+      return `<td class="empty">·</td>`;
+    }).join('');
+    return `
+    <tr>
+      <td class="tc num">${mk.no}</td>
+      <td class="tc"><span class="kls">${mk.kelas}</span></td>
+      <td><span class="kode-tag">${mk.kode}</span></td>
+      <td>
+        <div class="mk-name">${mk.nama}</div>
+        ${mk.isPraktikum ? '<span class="prak-tag">Praktikum</span>' : ''}
+      </td>
+      <td><div class="dosen">${mk.dosen}</div></td>
+      <td><span class="sks-num">${mk.sks}</span></td>
+      ${dayCells}
+    </tr>`;
+  }).join('');
+
+  // WEEKLY COLUMNS
+  const dayNames = ['sn','sl','rb','km','jm','sb'];
+  const dayLabels = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const weekCols = dayNames.map((d, di) => {
+    const cards = weekly[d].length
+      ? weekly[d].map(s => `
+        <div class="wk-card" style="background:${s.color}">
+          <div class="wt">${s.jam}</div>
+          <div class="wn">${s.nama}</div>
+          <div class="wr">${s.kode} · ${s.ruang}</div>
+        </div>`).join('')
+      : '<div class="no-cls">Tidak ada kelas</div>';
+    return `
+    <div class="day-col">
+      <div class="day-head">${dayLabels[di]}</div>
+      <div class="day-body">${cards}</div>
+    </div>`;
+  }).join('');
+
+  const now = new Date();
+  const printed = data.dicetak || now.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+
+  document.getElementById('app').innerHTML = `
+    <div class="header-card">
+      <div class="univ-logo">UMK</div>
+      <div class="univ-info">
+        <h1>Universitas Muria Kudus — Fakultas Teknik</h1>
+        <p>Jadwal Kuliah &nbsp;·&nbsp; ${m.prodi}</p>
+      </div>
+      <div class="header-right">
+        <div class="sem-label">Semester</div>
+        <div class="sem-value">${m.semester}</div>
+        <a href="upload.html" class="upload-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload Jadwal Baru
+        </a>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card"><div class="lbl">Nama Mahasiswa</div><div class="val">${m.nama}</div></div>
+      <div class="info-card"><div class="lbl">NIM</div><div class="val">${m.nim}</div></div>
+      <div class="info-card"><div class="lbl">Program Studi</div><div class="val">${m.prodi}</div></div>
+      <div class="info-card"><div class="lbl">Dosen PA</div><div class="val">${m.dosenPA}</div></div>
+      <div class="info-card sks-card"><div class="lbl">Beban SKS</div><div class="val">${m.sks}</div></div>
+    </div>
+
+    <div class="sec-h">
+      <h2>Daftar Matakuliah</h2>
+      <div class="sec-line"></div>
+      <div class="sec-badge">${mks.length} Matakuliah</div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr class="h1">
+            <th rowspan="2" class="tc" style="width:38px">No.</th>
+            <th rowspan="2" class="tc" style="width:50px">Kelas</th>
+            <th class="sub-kode" style="width:76px">Kode</th>
+            <th class="sub-nama">Nama Matakuliah</th>
+            <th rowspan="2" style="width:185px">Dosen</th>
+            <th rowspan="2" class="tc" style="width:46px">SKS</th>
+            <th class="day-th" style="width:88px">Sn</th>
+            <th class="day-th" style="width:88px">Sl</th>
+            <th class="day-th" style="width:88px">Rb</th>
+            <th class="day-th" style="width:88px">Km</th>
+            <th class="day-th" style="width:88px">Jm</th>
+            <th class="day-th" style="width:50px">Sb</th>
+            <th class="day-th" style="width:50px">Mg</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+
+    <div class="sec-h">
+      <h2>Ringkasan Mingguan</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="week-grid">${weekCols}</div>
+
+    <div class="footer-row">
+      <div class="fl">Dicetak: <strong>${printed}</strong> &nbsp;·&nbsp; Sumber: Kanal UMK</div>
+      <div class="fr"><strong>${m.dosenPA}</strong>Dosen PA</div>
+    </div>
+  `;
+}
+
+// Load data: localStorage first, then default
+let data = DEFAULT_DATA;
+try {
+  const saved = localStorage.getItem('jadwal_data');
+  if (saved) data = JSON.parse(saved);
+} catch(e) {}
+render(data);
+</script>
+</body>
+</html>
