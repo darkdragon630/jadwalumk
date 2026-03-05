@@ -1,84 +1,75 @@
 # Jadwal Kuliah UMK
 
-Web app jadwal kuliah dengan AI parser PDF.
+Web app jadwal kuliah dengan AI parser PDF — di-deploy di Cloudflare Workers.
 
 ## Struktur File
 
 ```
 jadwal/
-├── index.html      → Halaman jadwal (jadwal/index)
-├── upload.html     → Halaman upload PDF (jadwal/upload)
-├── server.js       → Backend proxy (wajib dijalankan)
-├── package.json
+├── index.html    → Halaman jadwal
+├── upload.html   → Halaman upload PDF
+├── worker.js     → Cloudflare Worker (proxy Anthropic API)
+├── server.js     → Backend Node.js (alternatif lokal)
 └── README.md
 ```
 
-## Setup & Jalankan
+---
 
-### 1. Install dependencies
-```bash
-npm install
+## Deploy ke Cloudflare Workers (Recommended)
+
+### Masalah CORS
+Browser **tidak bisa** langsung memanggil `api.anthropic.com` — akan diblokir CORS.
+Solusinya: gunakan **Cloudflare Worker** sebagai proxy server-side.
+
+### Langkah 1 — Deploy Worker proxy
+
+1. Buka https://dash.cloudflare.com → Workers & Pages → Create
+2. Pilih "Hello World" template → beri nama, misal: `jadwal-proxy`
+3. Klik Edit code → hapus isi default → paste seluruh isi `worker.js`
+4. Klik Deploy
+
+### Langkah 2 — Set API Key di Worker
+
+Di halaman Worker: Settings → Variables → Add variable
+
+| Variable name       | Value              |
+|---------------------|--------------------|
+| ANTHROPIC_API_KEY   | sk-ant-xxxxxxxxx   |
+
+Klik Encrypt lalu Save and deploy.
+
+### Langkah 3 — Konfigurasi URL proxy di upload.html
+
+Buka `upload.html`, cari baris:
+
+```js
+const PROXY_URL = '/api/parse';
 ```
 
-### 2. Set API Key
-Tambahkan environment variable `ANTHROPIC_API_KEY`:
+Jika Worker proxy di subdomain terpisah (misal jadwal-proxy.nama.workers.dev), ganti:
+```js
+const PROXY_URL = 'https://jadwal-proxy.nama.workers.dev';
+```
+
+Jika Worker dan halaman di domain yang sama, biarkan `/api/parse`.
+
+---
+
+## Jalankan Lokal dengan Node.js
 
 ```bash
-# Linux / macOS
+npm install express
 export ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxx
-
-# Windows (CMD)
-set ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxx
-
-# Windows (PowerShell)
-$env:ANTHROPIC_API_KEY="sk-ant-xxxxxxxxxx"
+node server.js
+# Buka http://localhost:3000
 ```
 
-### 3. Jalankan server
-```bash
-npm start
+---
+
+## Arsitektur
+
 ```
-
-### 4. Buka di browser
+Browser (upload.html)
+  └─► POST /api/parse ──► Worker / server.js (proxy)
+                              └─► POST api.anthropic.com (server-side, bebas CORS)
 ```
-http://localhost:3000/index.html   → Jadwal
-http://localhost:3000/upload.html  → Upload PDF baru
-```
-
-## Deploy ke Wasmer / VPS
-
-### Wasmer Edge
-Tambahkan `ANTHROPIC_API_KEY` di **Environment Variables** pada dashboard Wasmer, 
-lalu deploy dengan:
-```bash
-wasmer deploy
-```
-
-### VPS (Ubuntu/Debian)
-```bash
-# Install Node.js
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Clone / upload files ke server
-npm install
-
-# Jalankan dengan PM2 agar tetap hidup
-npm install -g pm2
-ANTHROPIC_API_KEY=sk-ant-xxx pm2 start server.js --name jadwal-umk
-pm2 save
-```
-
-## Cara Pakai
-
-1. Buka `http://domain-kamu/index.html` → tampil jadwal semester sekarang
-2. Klik **"Upload Jadwal Baru"** → menuju `/upload.html`
-3. Drag & drop atau pilih PDF jadwal semester baru dari Kanal UMK
-4. Klik **"Proses & Tampilkan Jadwal"** → AI membaca PDF, ekstrak data
-5. Otomatis redirect ke `index.html` dengan jadwal baru yang sudah tampil rapi
-
-## Kenapa ada server.js?
-
-Browser memblokir request langsung ke `api.anthropic.com` (CORS policy).
-`server.js` bertindak sebagai proxy — request dari browser dikirim ke `/api/parse`,
-lalu server yang meneruskannya ke Anthropic API (server-side, bebas CORS).

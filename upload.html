@@ -256,101 +256,35 @@ async function processUpload() {
     const base64 = await fileToBase64(selectedFile);
     setProgress(30, 'Mengirim ke AI untuk dianalisis...');
 
-    const PROMPT = `Kamu adalah parser jadwal kuliah mahasiswa Indonesia. Ekstrak semua data dari PDF jadwal kuliah ini dan kembalikan HANYA JSON murni tanpa markdown, tanpa komentar, tanpa tanda backtick.
+    // ── Kirim ke Worker proxy (bukan langsung ke Anthropic — akan kena CORS) ──
+    // Ganti URL di bawah dengan URL Worker kamu jika berbeda
+    const PROXY_URL = '/api/parse';
 
-Format JSON yang harus dikembalikan:
-{
-  "mahasiswa": {
-    "nama": "...",
-    "nim": "...",
-    "prodi": "...",
-    "dosenPA": "...",
-    "sks": 24,
-    "semester": "..."
-  },
-  "matakuliah": [
-    {
-      "no": 1,
-      "kelas": "A",
-      "kode": "IFT406",
-      "nama": "Nama Matakuliah",
-      "isPraktikum": false,
-      "dosen": "Nama Dosen",
-      "sks": 2,
-      "jadwal": {
-        "sn": null,
-        "sl": null,
-        "rb": { "jam": "08:00–09:39", "ruang": "J.4,11" },
-        "km": null,
-        "jm": null,
-        "sb": null,
-        "mg": null
-      }
-    }
-  ],
-  "dicetak": "tanggal cetak jika ada"
-}
-
-Aturan penting:
-- Key hari: sn=Senin, sl=Selasa, rb=Rabu, km=Kamis, jm=Jumat, sb=Sabtu, mg=Minggu
-- Jika hari tidak ada jadwal, nilainya null
-- isPraktikum = true jika nama matakuliah mengandung kata "Praktikum"
-- Ekstrak semua baris matakuliah dari tabel
-- Kembalikan HANYA JSON, tidak ada teks lain sama sekali`;
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'document',
-              source: { type: 'base64', media_type: 'application/pdf', data: base64 }
-            },
-            { type: 'text', text: PROMPT }
-          ]
-        }]
-      })
+      body: JSON.stringify({ pdfBase64: base64 })
     });
 
     setProgress(70, 'Memproses hasil dari AI...');
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error(err.error?.message || 'Gagal menghubungi API. Pastikan koneksi internet aktif.');
+      throw new Error(err.error || 'Gagal menghubungi proxy. Pastikan Worker sudah di-deploy.');
     }
 
     const result = await response.json();
-    const raw = result.content?.map(c => c.text || '').join('') || '';
+    if (!result.ok || !result.data) {
+      throw new Error(result.error || 'Respons tidak valid dari proxy.');
+    }
+
+    const parsed = result.data;
 
     setProgress(85, 'Memvalidasi data jadwal...');
-
-    // Clean & parse JSON
-    let jsonStr = raw.trim();
-    jsonStr = jsonStr.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
-
-    let parsed;
-    try {
-      parsed = JSON.parse(jsonStr);
-    } catch(e) {
-      // Try to extract JSON object
-      const match = jsonStr.match(/\{[\s\S]*\}/);
-      if (match) parsed = JSON.parse(match[0]);
-      else throw new Error('Format data tidak valid. Coba upload ulang PDF yang lebih jelas.');
-    }
 
     // Validate structure
     if (!parsed.mahasiswa || !Array.isArray(parsed.matakuliah)) {
       throw new Error('Data tidak lengkap. Pastikan PDF adalah jadwal kuliah UMK yang valid.');
-    }
-
-    // Add print date
-    if (!parsed.dicetak) {
-      parsed.dicetak = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
     }
 
     setProgress(100, 'Menyimpan data...');
