@@ -173,7 +173,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 <script>
 const HAS_KEY = <?= $hasKey ? 'true' : 'false' ?>;
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-3.1-pro';
 let selectedFile = null;
 
 async function saveApiKey() { await _saveKey(document.getElementById('apiKeyInput'), document.getElementById('apiStatus'), 'apiSection'); }
