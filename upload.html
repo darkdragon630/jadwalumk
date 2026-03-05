@@ -5,104 +5,52 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Upload Jadwal – UMK</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root {
   --navy:#0d1f3c; --gold:#d4a030; --gold-light:#f5c842;
   --bg:#f0f2f7; --white:#fff; --border:#e2e6f0;
-  --text:#1a2540; --muted:#7a84a0;
-  --green:#1e7a45; --red:#9c2c2c;
+  --text:#1a2540; --muted:#7a84a0; --green:#1e7a45; --red:#9c2c2c;
 }
 body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 16px; }
-
-.card {
-  background:var(--white); border:1px solid var(--border); border-radius:24px;
-  padding:48px 44px; max-width:520px; width:100%;
-  box-shadow:0 8px 48px rgba(13,31,60,.10);
-  animation: up .45s ease both;
-}
+.card { background:var(--white); border:1px solid var(--border); border-radius:24px; padding:48px 44px; max-width:520px; width:100%; box-shadow:0 8px 48px rgba(13,31,60,.10); animation:up .45s ease both; }
 @keyframes up { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-
-.top { display:flex; align-items:center; gap:14px; margin-bottom:32px; }
+.top { display:flex; align-items:center; gap:14px; margin-bottom:20px; }
 .logo { width:46px; height:46px; background:var(--navy); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:var(--gold); flex-shrink:0; }
 .top-text h1 { font-size:17px; font-weight:800; color:var(--navy); }
 .top-text p { font-size:12px; color:var(--muted); margin-top:2px; }
 .back-link { margin-left:auto; font-size:12px; font-weight:600; color:var(--muted); text-decoration:none; display:flex; align-items:center; gap:5px; transition:color .2s; }
 .back-link:hover { color:var(--navy); }
-
-/* API KEY SECTION */
-.apikey-section { margin-bottom:20px; }
-.apikey-label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:7px; display:flex; align-items:center; justify-content:space-between; }
-.apikey-label a { font-size:10px; color:var(--gold); text-decoration:none; font-weight:600; }
-.apikey-label a:hover { text-decoration:underline; }
-.apikey-wrap { display:flex; gap:8px; }
-.apikey-input {
-  flex:1; padding:10px 14px; border:1.5px solid var(--border); border-radius:10px;
-  font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; color:var(--text);
-  background:var(--bg); outline:none; transition:border-color .2s;
-  letter-spacing:.05em;
-}
-.apikey-input:focus { border-color:var(--navy); background:#fff; }
-.apikey-input.saved { border-color:var(--green); background:#f0faf4; }
-.apikey-save {
-  padding:10px 16px; border-radius:10px; border:none; cursor:pointer;
-  font-family:'Plus Jakarta Sans',sans-serif; font-size:12px; font-weight:700;
-  background:var(--navy); color:#fff; transition:all .2s; white-space:nowrap;
-}
-.apikey-save:hover { background:#1a3260; }
-.apikey-status { font-size:11px; margin-top:6px; height:14px; }
-.apikey-status.ok { color:var(--green); }
-.apikey-status.err { color:var(--red); }
-
-/* DROP ZONE */
-.drop-zone {
-  border:2px dashed var(--border); border-radius:16px;
-  padding:40px 24px; text-align:center; cursor:pointer;
-  transition:all .2s; background:var(--bg); position:relative;
-}
+.badge-free { display:inline-flex; align-items:center; gap:5px; background:#edfaf3; border:1px solid #a0e0c0; color:#0d5c32; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; margin-bottom:18px; }
+.drop-zone { border:2px dashed var(--border); border-radius:16px; padding:40px 24px; text-align:center; cursor:pointer; transition:all .2s; background:var(--bg); position:relative; }
 .drop-zone.drag { border-color:var(--gold); background:#fdf8ee; }
 .drop-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
 .dz-icon { width:52px; height:52px; background:var(--navy); border-radius:14px; display:flex; align-items:center; justify-content:center; margin:0 auto 14px; }
-.dz-icon svg { color:var(--gold); }
 .dz-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px; }
 .dz-sub { font-size:12.5px; color:var(--muted); }
 .dz-sub span { color:var(--navy); font-weight:600; }
-
-.file-preview {
-  display:none; align-items:center; gap:12px;
-  background:#f0f5ff; border:1px solid #c8d8ff; border-radius:12px;
-  padding:14px 16px; margin-top:14px;
-}
+.file-preview { display:none; align-items:center; gap:12px; background:#f0f5ff; border:1px solid #c8d8ff; border-radius:12px; padding:14px 16px; margin-top:14px; }
 .file-preview.show { display:flex; }
 .fp-icon { width:36px; height:36px; background:var(--navy); border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .fp-name { font-size:13px; font-weight:700; color:var(--text); }
 .fp-size { font-size:11px; color:var(--muted); margin-top:2px; }
 .fp-remove { margin-left:auto; background:none; border:none; cursor:pointer; color:var(--muted); transition:color .2s; padding:4px; }
 .fp-remove:hover { color:var(--red); }
-
-.btn {
-  width:100%; padding:15px; border-radius:12px; border:none; cursor:pointer;
-  font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:700;
-  background:var(--navy); color:#fff; margin-top:20px;
-  transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px;
-}
+.btn { width:100%; padding:15px; border-radius:12px; border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:700; background:var(--navy); color:#fff; margin-top:20px; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px; }
 .btn:hover:not(:disabled) { background:#1a3260; transform:translateY(-1px); box-shadow:0 6px 20px rgba(13,31,60,.2); }
-.btn:disabled { opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+.btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 .btn.success { background:var(--green); }
-
-.status-box { display:none; margin-top:18px; border-radius:12px; padding:16px 18px; font-size:13px; line-height:1.5; }
+.status-box { display:none; margin-top:18px; border-radius:12px; padding:16px 18px; font-size:13px; line-height:1.6; }
 .status-box.show { display:block; }
-.status-box.info { background:#eef4ff; border:1px solid #c0d4ff; color:#1a3a8f; }
 .status-box.error { background:#fff0f0; border:1px solid #ffc0c0; color:#8b0000; }
 .status-box.ok { background:#edfaf3; border:1px solid #a0e0c0; color:#0d5c32; }
-
 .progress-wrap { display:none; margin-top:16px; }
 .progress-wrap.show { display:block; }
 .progress-label { font-size:12px; font-weight:600; color:var(--muted); margin-bottom:8px; display:flex; justify-content:space-between; }
 .progress-bar { height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
-.progress-fill { height:100%; background:linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius:3px; transition:width .4s ease; width:0%; }
-
-.steps { margin-top:28px; border-top:1px solid var(--border); padding-top:20px; display:flex; gap:0; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold-light)); border-radius:3px; transition:width .4s ease; width:0%; }
+.steps { margin-top:24px; border-top:1px solid var(--border); padding-top:20px; display:flex; }
 .step { flex:1; text-align:center; position:relative; }
 .step:not(:last-child)::after { content:''; position:absolute; top:14px; left:60%; width:80%; height:2px; background:var(--border); z-index:0; }
 .step.done:not(:last-child)::after { background:var(--gold); }
@@ -114,7 +62,6 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 </style>
 </head>
 <body>
-
 <div class="card">
   <div class="top">
     <div class="logo">UMK</div>
@@ -128,61 +75,43 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
     </a>
   </div>
 
-  <!-- API KEY -->
-  <div class="apikey-section">
-    <div class="apikey-label">
-      <span>🔑 Anthropic API Key</span>
-      <a href="https://console.anthropic.com/settings/keys" target="_blank">Dapatkan API Key →</a>
-    </div>
-    <div class="apikey-wrap">
-      <input type="password" class="apikey-input" id="apikeyInput" placeholder="sk-ant-..." autocomplete="off" />
-      <button class="apikey-save" onclick="saveKey()">Simpan</button>
-    </div>
-    <div class="apikey-status" id="apikeyStatus"></div>
+  <div class="badge-free">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    Diproses 100% di browser — tanpa server &amp; API key
   </div>
 
-  <!-- STEPS -->
   <div class="steps">
     <div class="step active" id="s1"><div class="step-circle">1</div><div class="step-label">Pilih PDF</div></div>
-    <div class="step" id="s2"><div class="step-circle">2</div><div class="step-label">Proses AI</div></div>
+    <div class="step" id="s2"><div class="step-circle">2</div><div class="step-label">Parsing</div></div>
     <div class="step" id="s3"><div class="step-circle">3</div><div class="step-label">Selesai</div></div>
   </div>
 
-  <!-- DROP ZONE -->
   <div style="margin-top:24px">
     <div class="drop-zone" id="dropZone">
       <input type="file" id="fileInput" accept=".pdf" />
       <div class="dz-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4a030" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
       </div>
       <div class="dz-title">Seret PDF jadwal ke sini</div>
       <div class="dz-sub">atau <span>klik untuk memilih file</span></div>
     </div>
-
     <div class="file-preview" id="filePreview">
       <div class="fp-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4a030" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       </div>
-      <div>
-        <div class="fp-name" id="fpName">–</div>
-        <div class="fp-size" id="fpSize">–</div>
-      </div>
-      <button class="fp-remove" id="fpRemove" title="Hapus file">
+      <div><div class="fp-name" id="fpName">–</div><div class="fp-size" id="fpSize">–</div></div>
+      <button class="fp-remove" id="fpRemove">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
   </div>
 
-  <!-- PROGRESS -->
   <div class="progress-wrap" id="progressWrap">
     <div class="progress-label"><span id="progressLabel">Membaca PDF...</span><span id="progressPct">0%</span></div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
   </div>
-
-  <!-- STATUS -->
   <div class="status-box" id="statusBox"></div>
 
-  <!-- BUTTON -->
   <button class="btn" id="uploadBtn" disabled onclick="processUpload()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     Proses &amp; Tampilkan Jadwal
@@ -190,41 +119,10 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 </div>
 
 <script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
 let selectedFile = null;
 
-// ── Load saved API key ──
-window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('anthropic_api_key');
-  if (saved) {
-    document.getElementById('apikeyInput').value = saved;
-    document.getElementById('apikeyInput').classList.add('saved');
-    document.getElementById('apikeyStatus').textContent = '✓ API key tersimpan';
-    document.getElementById('apikeyStatus').className = 'apikey-status ok';
-  }
-  updateBtn();
-});
-
-function saveKey() {
-  const val = document.getElementById('apikeyInput').value.trim();
-  if (!val.startsWith('sk-ant-')) {
-    document.getElementById('apikeyStatus').textContent = '✗ Format tidak valid. Harus dimulai dengan sk-ant-';
-    document.getElementById('apikeyStatus').className = 'apikey-status err';
-    return;
-  }
-  localStorage.setItem('anthropic_api_key', val);
-  document.getElementById('apikeyInput').classList.add('saved');
-  document.getElementById('apikeyStatus').textContent = '✓ Tersimpan di browser';
-  document.getElementById('apikeyStatus').className = 'apikey-status ok';
-  updateBtn();
-}
-
-function updateBtn() {
-  const hasKey = !!localStorage.getItem('anthropic_api_key');
-  const hasFile = !!selectedFile;
-  document.getElementById('uploadBtn').disabled = !(hasKey && hasFile);
-}
-
-// ── Drag & Drop ──
 const dz = document.getElementById('dropZone');
 const fi = document.getElementById('fileInput');
 dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
@@ -232,26 +130,26 @@ dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
 dz.addEventListener('drop', e => {
   e.preventDefault(); dz.classList.remove('drag');
   const f = e.dataTransfer.files[0];
-  if (f && f.type === 'application/pdf') setFile(f);
+  if (f?.type === 'application/pdf') setFile(f);
   else showStatus('error', 'Harap upload file PDF yang valid.');
 });
 fi.addEventListener('change', () => { if (fi.files[0]) setFile(fi.files[0]); });
 document.getElementById('fpRemove').addEventListener('click', clearFile);
-document.getElementById('apikeyInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveKey(); });
 
 function setFile(f) {
   selectedFile = f;
   document.getElementById('fpName').textContent = f.name;
-  document.getElementById('fpSize').textContent = (f.size / 1024).toFixed(1) + ' KB';
+  document.getElementById('fpSize').textContent = (f.size/1024).toFixed(1)+' KB';
   document.getElementById('filePreview').classList.add('show');
-  clearStatus(); setStep(1); updateBtn();
+  document.getElementById('uploadBtn').disabled = false;
+  clearStatus(); setStep(1);
 }
 function clearFile() {
   selectedFile = null; fi.value = '';
   document.getElementById('filePreview').classList.remove('show');
-  clearStatus(); setStep(0); updateBtn();
+  document.getElementById('uploadBtn').disabled = true;
+  clearStatus(); setStep(0);
 }
-
 function setStep(n) {
   [1,2,3].forEach(i => {
     const el = document.getElementById('s'+i);
@@ -262,8 +160,7 @@ function setStep(n) {
 }
 function showStatus(type, msg) {
   const el = document.getElementById('statusBox');
-  el.className = 'status-box show ' + type;
-  el.innerHTML = msg;
+  el.className = 'status-box show '+type; el.innerHTML = msg;
 }
 function clearStatus() {
   const el = document.getElementById('statusBox');
@@ -271,111 +168,63 @@ function clearStatus() {
 }
 function setProgress(pct, label) {
   document.getElementById('progressWrap').classList.add('show');
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressPct').textContent = pct+'%';
   if (label) document.getElementById('progressLabel').textContent = label;
 }
-function hideProgress() {
-  document.getElementById('progressWrap').classList.remove('show');
-}
+function hideProgress() { document.getElementById('progressWrap').classList.remove('show'); }
 
-// ── Main Process ──
+// ═══════════════════════════════════════
+//  MAIN
+// ═══════════════════════════════════════
 async function processUpload() {
   if (!selectedFile) return;
-
-  const ANTHROPIC_API_KEY = localStorage.getItem('anthropic_api_key');
-  if (!ANTHROPIC_API_KEY) {
-    showStatus('error', 'Masukkan API key terlebih dahulu.');
-    return;
-  }
-
   const btn = document.getElementById('uploadBtn');
-  btn.disabled = true;
-  clearStatus(); setStep(2);
-  setProgress(10, 'Membaca file PDF...');
+  btn.disabled = true; clearStatus(); setStep(2);
+  setProgress(15, 'Membaca PDF...');
 
   try {
-    const base64 = await fileToBase64(selectedFile);
-    setProgress(30, 'Mengirim ke AI untuk dianalisis...');
+    const arrayBuffer = await selectedFile.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
-    const PROMPT = `Kamu adalah parser jadwal kuliah mahasiswa Indonesia. Ekstrak semua data dari PDF jadwal kuliah ini dan kembalikan HANYA JSON murni tanpa markdown, tanpa komentar, tanpa tanda backtick.
+    setProgress(35, 'Mengekstrak elemen teks...');
 
-Format JSON yang harus dikembalikan:
-{
-  "mahasiswa": {
-    "nama": "...", "nim": "...", "prodi": "...", "dosenPA": "...", "sks": 24, "semester": "..."
-  },
-  "matakuliah": [{
-    "no": 1, "kelas": "A", "kode": "IFT406", "nama": "Nama Matakuliah",
-    "isPraktikum": false, "dosen": "Nama Dosen", "sks": 2,
-    "jadwal": {
-      "sn": null, "sl": null, "rb": { "jam": "08:00-09:39", "ruang": "J.4,11" },
-      "km": null, "jm": null, "sb": null, "mg": null
-    }
-  }],
-  "dicetak": "tanggal cetak jika ada"
-}
-Aturan: key hari sn/sl/rb/km/jm/sb/mg, null jika kosong, isPraktikum=true jika nama mengandung "Praktikum". Kembalikan HANYA JSON.`;
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
-            { type: 'text', text: PROMPT }
-          ]
-        }]
-      })
-    });
-
-    setProgress(70, 'Memproses hasil dari AI...');
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error?.message || 'Gagal menghubungi Anthropic API.');
+    // Kumpulkan semua text items dengan koordinat dari semua halaman
+    let allItems = [];
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page  = await pdf.getPage(p);
+      const vp    = page.getViewport({ scale: 1 });
+      const tc    = await page.getTextContent();
+      tc.items.forEach(item => {
+        if (!item.str.trim()) return;
+        allItems.push({
+          text: item.str.trim(),
+          x: Math.round(item.transform[4]),
+          // Flip Y: PDF Y=0 is bottom, kita invert jadi atas=0
+          y: Math.round(vp.height - item.transform[5]),
+          w: Math.round(item.width),
+          h: Math.round(item.height),
+        });
+      });
     }
 
-    const result = await response.json();
-    const raw = result.content?.map(c => c.text || '').join('') || '';
+    setProgress(55, 'Menganalisis struktur tabel...');
+    const result = parseUMKJadwal(allItems);
 
-    setProgress(85, 'Memvalidasi data jadwal...');
-
-    let jsonStr = raw.trim()
-      .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
-
-    let parsed;
-    try { parsed = JSON.parse(jsonStr); }
-    catch {
-      const match = jsonStr.match(/\{[\s\S]*\}/);
-      if (match) parsed = JSON.parse(match[0]);
-      else throw new Error('Format data tidak valid dari AI.');
+    if (!result || result.matakuliah.length === 0) {
+      throw new Error('Gagal membaca tabel jadwal. Pastikan PDF adalah jadwal kuliah dari Kanal UMK (format standar).');
     }
 
-    if (!parsed.mahasiswa || !Array.isArray(parsed.matakuliah)) {
-      throw new Error('Data tidak lengkap. Pastikan PDF adalah jadwal kuliah UMK yang valid.');
-    }
-    if (!parsed.dicetak) {
-      parsed.dicetak = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
-    }
+    setProgress(85, 'Menyimpan data...');
+    localStorage.setItem('jadwal_data', JSON.stringify(result));
 
-    setProgress(100, 'Menyimpan data...');
-    localStorage.setItem('jadwal_data', JSON.stringify(parsed));
-
+    setProgress(100, 'Selesai!');
     setStep(3);
     showStatus('ok', `
-      <strong>✓ Jadwal berhasil diproses!</strong><br>
-      Ditemukan <strong>${parsed.matakuliah.length} matakuliah</strong> untuk <strong>${parsed.mahasiswa.nama}</strong> — ${parsed.mahasiswa.semester}.<br>
-      <span style="color:#555">Mengalihkan ke halaman jadwal...</span>
+      <strong>✓ Jadwal berhasil dibaca!</strong><br>
+      <strong>${result.matakuliah.length} matakuliah</strong> · <strong>${result.mahasiswa.nama}</strong><br>
+      Semester: ${result.mahasiswa.semester} · SKS: ${result.mahasiswa.sks}<br>
+      <span style="color:#555;font-size:12px">Mengalihkan dalam 2 detik...</span>
     `);
     btn.classList.add('success');
     btn.innerHTML = '✓ Berhasil — Mengalihkan...';
@@ -388,14 +237,290 @@ Aturan: key hari sn/sl/rb/km/jm/sb/mg, null jika kosong, isPraktikum=true jika n
   }
 }
 
-function fileToBase64(file) {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result.split(',')[1]);
-    r.onerror = () => rej(new Error('Gagal membaca file.'));
-    r.readAsDataURL(file);
+// ═══════════════════════════════════════
+//  PARSER KOORDINAT
+// ═══════════════════════════════════════
+function parseUMKJadwal(items) {
+
+  // ── 1. Kelompokkan item ke dalam baris (Y yang berdekatan = baris sama) ──
+  const Y_THRESH = 6; // px tolerance
+  const rows = [];
+  const sortedByY = [...items].sort((a,b) => a.y - b.y || a.x - b.x);
+
+  for (const item of sortedByY) {
+    const lastRow = rows[rows.length - 1];
+    if (lastRow && Math.abs(item.y - lastRow.y) <= Y_THRESH) {
+      lastRow.items.push(item);
+    } else {
+      rows.push({ y: item.y, items: [item] });
+    }
+  }
+
+  // Untuk setiap baris, sort item berdasarkan X
+  rows.forEach(r => r.items.sort((a,b) => a.x - b.x));
+
+  // ── 2. Gabungkan teks per baris ──
+  const textRows = rows.map(r => ({
+    y: r.y,
+    text: r.items.map(i => i.str || i.text).join(' ').trim(),
+    items: r.items,
+  }));
+
+  // ── 3. Ekstrak info mahasiswa dari baris-baris header ──
+  const fullText = textRows.map(r => r.text).join('\n');
+
+  const nama     = findVal(fullText, /Nama\s*:\s*(.+?)(?=\n|Dosen|NIM)/i);
+  const nim      = findVal(fullText, /NIM\s*:\s*(\d+)/i);
+  const prodi    = findVal(fullText, /Program Studi\s*:\s*(.+?)(?=\n|Dosen|Semester)/i);
+  const dosenPA  = findVal(fullText, /Dosen Pa\s*:\s*(.+?)(?=\n|Semester)/i);
+  const semester = findVal(fullText, /Semester\s*:\s*(.+?)(?=\n|Beban)/i);
+  const sksRaw   = findVal(fullText, /Beban SKS\s*:\s*(\d+)/i);
+  const dicetak  = findVal(fullText, /(\d{2}\/\d{2}\/\d{2,4}[,\s]+\d{2}[.:]\d{2})/);
+
+  // ── 4. Temukan baris header tabel (mengandung "Kode" dan "Nama") ──
+  const headerRowIdx = textRows.findIndex(r =>
+    /\bkode\b/i.test(r.text) && /\bnama\b/i.test(r.text)
+  );
+  if (headerRowIdx < 0) return null;
+
+  // Ambil kolom X dari header row untuk menentukan batas kolom
+  const headerRow = rows[headerRowIdx];
+  // Header items: No, Kelas, Kode, Nama, Dosen, SKS, Sn, Sl, Rb, Km, Jm, Sb, Mg
+  // Cari X posisi hari-hari dari header row sebelumnya (row yang ada Sn Sl Rb...)
+  const dayHeaderIdx = textRows.findIndex(r =>
+    /\bSn\b/.test(r.text) && /\bSl\b/.test(r.text) && /\bRb\b/.test(r.text)
+  );
+
+  // Posisi X dari kolom hari (dari header row)
+  const DAY_KEYS = ['sn','sl','rb','km','jm','sb','mg'];
+  const DAY_ABBR = ['Sn','Sl','Rb','Km','Jm','Sb','Mg'];
+  let dayXMap = {}; // key -> center X
+
+  if (dayHeaderIdx >= 0) {
+    const dhr = rows[dayHeaderIdx];
+    DAY_ABBR.forEach((abbr, i) => {
+      const it = dhr.items.find(it => (it.str || it.text).trim() === abbr);
+      if (it) dayXMap[DAY_KEYS[i]] = it.x;
+    });
+  }
+
+  // Fallback: estimasi posisi X hari dari seluruh dokumen
+  if (Object.keys(dayXMap).length < 3) {
+    DAY_ABBR.forEach((abbr, i) => {
+      const it = items.find(it => (it.str || it.text).trim() === abbr);
+      if (it) dayXMap[DAY_KEYS[i]] = it.x;
+    });
+  }
+
+  // ── 5. Parse baris-baris tabel setelah header ──
+  // Setiap baris matakuliah dimulai dengan angka (nomor urut)
+  const tableStartY = textRows[headerRowIdx].y;
+  const tableItems  = items.filter(it => it.y > tableStartY + 5);
+
+  // Kelompokkan ulang item tabel ke dalam baris (dengan Y_THRESH lebih longgar untuk sel tabel)
+  const TABLE_Y_THRESH = 8;
+  const tableRows = [];
+  const tSorted = [...tableItems].sort((a,b) => a.y - b.y || a.x - b.x);
+  for (const item of tSorted) {
+    const last = tableRows[tableRows.length - 1];
+    if (last && Math.abs(item.y - last.y) <= TABLE_Y_THRESH) {
+      last.items.push(item);
+    } else {
+      tableRows.push({ y: item.y, items: [item] });
+    }
+  }
+  tableRows.forEach(r => r.items.sort((a,b) => a.x - b.x));
+
+  // Cluster baris menjadi "grup baris" per matakuliah
+  // Setiap matakuliah bisa span beberapa baris teks (nama panjang, dosen panjang)
+  // Mulai grup baru ketika ada item dengan text = angka di X kecil (kolom No)
+  const NO_X_MAX = 80; // kolom "No." ada di X < 80
+  const mkGroups = [];
+  let currentGroup = null;
+
+  for (const row of tableRows) {
+    const firstItem = row.items[0];
+    const firstText = (firstItem?.str || firstItem?.text || '').trim();
+    const isNewRow = /^\d+$/.test(firstText) && firstItem.x < NO_X_MAX;
+
+    if (isNewRow) {
+      currentGroup = { rows: [row] };
+      mkGroups.push(currentGroup);
+    } else if (currentGroup) {
+      currentGroup.rows.push(row);
+    }
+  }
+
+  // ── 6. Ekstrak data setiap matakuliah dari grupnya ──
+  const matakuliah = [];
+
+  // Tentukan batas X per kolom (estimasi dari posisi item)
+  // Kolom: No(~30), Kelas(~70), Kode(~100), Nama(~160), Dosen(~310), SKS(~450), Sn(~490), Sl(~530), Rb(~570), Km(~610), Jm(~650), Sb(~690), Mg(~730)
+  // Gunakan dayXMap jika tersedia, jika tidak gunakan estimasi
+  const dayBounds = buildDayBounds(dayXMap, items);
+
+  mkGroups.forEach((group, gi) => {
+    // Flatten semua items dalam grup
+    const gItems = group.rows.flatMap(r => r.items);
+
+    // No urut: item angka di X paling kiri
+    const noItem  = gItems.find(it => /^\d+$/.test((it.str||it.text).trim()) && it.x < NO_X_MAX);
+    const no      = noItem ? parseInt((noItem.str||noItem.text).trim()) : gi+1;
+
+    // Kelas: huruf A-F setelah no (X sedikit lebih besar)
+    const kelasItem = gItems.find(it => /^[A-F]$/.test((it.str||it.text).trim()) && it.x > NO_X_MAX && it.x < 110);
+    const kelas     = kelasItem ? (kelasItem.str||kelasItem.text).trim() : '?';
+
+    // Kode: pattern IFTxxx / TITxxx
+    const kodeItem  = gItems.find(it => /^[A-Z]{2,4}\d{3,4}$/.test((it.str||it.text).trim()));
+    const kode      = kodeItem ? (kodeItem.str||kodeItem.text).trim() : '';
+    if (!kode) return; // skip baris non-data
+
+    // Kode X position → semua item dengan X lebih besar dari kode adalah nama/dosen/sks/jadwal
+    const kodeX = kodeItem.x;
+
+    // Nama MK: teks antara kode dan dosen (X > kodeX, X < midpoint)
+    // Dosen: mengandung gelar akademik
+    const dosenPattern = /S\.Kom|M\.Kom|M\.Cs|S\.T\.|M\.T\.|Ph\.D|Dr\./i;
+    const namaItems  = [];
+    const dosenItems = [];
+    const sksArea    = [];
+    const jadwalArea = [];
+
+    // Tentukan batas kolom dari dayBounds
+    const firstDayX = dayBounds.length > 0 ? dayBounds[0].x - 20 : 460;
+
+    gItems.forEach(it => {
+      const t = (it.str||it.text).trim();
+      if (!t || it === kodeItem || it === noItem || it === kelasItem) return;
+      if (it.x <= kodeX) return; // skip kolom sebelum kode
+
+      if (it.x >= firstDayX) {
+        jadwalArea.push(it);
+      } else if (/^\d$/.test(t) && it.x > firstDayX - 80) {
+        sksArea.push(it);
+      } else if (dosenPattern.test(t) || (dosenItems.length > 0 && it.x < firstDayX - 60)) {
+        dosenItems.push(it);
+      } else if (namaItems.length === 0 || it.x < firstDayX - 60) {
+        if (!dosenPattern.test(t)) namaItems.push(it);
+        else dosenItems.push(it);
+      }
+    });
+
+    // Gabungkan nama (sorted by X then Y)
+    const nama = namaItems
+      .sort((a,b) => a.y - b.y || a.x - b.x)
+      .map(it => (it.str||it.text).trim())
+      .join(' ').replace(/\s+/g,' ').trim();
+
+    // Gabungkan dosen
+    const dosen = dosenItems
+      .sort((a,b) => a.y - b.y || a.x - b.x)
+      .map(it => (it.str||it.text).trim())
+      .join(' ').replace(/\s+/g,' ').trim();
+
+    // SKS
+    const sksItem = sksArea.find(it => /^[1-6]$/.test((it.str||it.text).trim()));
+    const sks = sksItem ? parseInt((sksItem.str||sksItem.text).trim()) : 2;
+
+    // Parse jadwal dari jadwalArea
+    const jadwal = extractJadwal(jadwalArea, dayBounds);
+    const isPraktikum = /praktikum/i.test(nama);
+
+    matakuliah.push({ no, kelas, kode, nama, isPraktikum, dosen, sks, jadwal });
   });
+
+  if (matakuliah.length === 0) return null;
+
+  return {
+    mahasiswa: {
+      nama:    clean(nama    || ''),
+      nim:     clean(nim     || ''),
+      prodi:   clean(prodi   || 'Teknik Informatika – S1'),
+      dosenPA: clean(dosenPA || ''),
+      sks:     sksRaw ? parseInt(sksRaw) : matakuliah.reduce((s,m) => s+m.sks, 0),
+      semester:clean(semester|| ''),
+    },
+    matakuliah,
+    dicetak: dicetak || new Date().toLocaleDateString('id-ID', {day:'2-digit',month:'long',year:'numeric'}),
+  };
 }
+
+function buildDayBounds(dayXMap, allItems) {
+  const DAY_KEYS = ['sn','sl','rb','km','jm','sb','mg'];
+  const DAY_ABBR = ['Sn','Sl','Rb','Km','Jm','Sb','Mg'];
+  const bounds = [];
+
+  DAY_KEYS.forEach((key, i) => {
+    let x = dayXMap[key];
+    if (!x) {
+      // Cari dari semua items
+      const it = allItems.find(it => (it.str||it.text||'').trim() === DAY_ABBR[i]);
+      if (it) x = it.x;
+    }
+    if (x) bounds.push({ key, x });
+  });
+
+  // Sort by X
+  bounds.sort((a,b) => a.x - b.x);
+  return bounds;
+}
+
+function extractJadwal(jadwalItems, dayBounds) {
+  const jadwal = { sn:null, sl:null, rb:null, km:null, jm:null, sb:null, mg:null };
+  if (jadwalItems.length === 0 || dayBounds.length === 0) return jadwal;
+
+  // Tentukan lebar tiap kolom hari
+  const colWidth = dayBounds.length > 1
+    ? Math.round((dayBounds[dayBounds.length-1].x - dayBounds[0].x) / (dayBounds.length - 1))
+    : 45;
+
+  // Untuk setiap item jadwal, cari kolom hari terdekat
+  // Kumpulkan text per kolom
+  const colTexts = {};
+  dayBounds.forEach(b => colTexts[b.key] = []);
+
+  jadwalItems.forEach(it => {
+    const t = (it.str||it.text).trim();
+    if (!t) return;
+    // Cari bound terdekat
+    let closest = null, minDist = Infinity;
+    dayBounds.forEach(b => {
+      const dist = Math.abs(it.x - b.x);
+      if (dist < minDist && dist < colWidth * 0.75) {
+        minDist = dist; closest = b.key;
+      }
+    });
+    if (closest) colTexts[closest].push(t);
+  });
+
+  // Parse setiap kolom: cari waktu dan ruang
+  Object.keys(colTexts).forEach(key => {
+    const texts = colTexts[key];
+    if (texts.length === 0) return;
+    const combined = texts.join(' ');
+
+    // Cari waktu: format 08:00 atau 08:00- atau 10:29
+    const times = combined.match(/\d{2}:\d{2}/g) || [];
+    // Cari ruang: format (I.3,04) atau (J.4,11)
+    const ruangM = combined.match(/\(([^)]+)\)/);
+    const ruang  = ruangM ? ruangM[1] : (combined.match(/[IJ]\.\d,\d{2}/)?.[0] || '');
+
+    if (times.length >= 2) {
+      jadwal[key] = { jam: times[0]+'–'+times[1], ruang };
+    } else if (times.length === 1 && ruang) {
+      jadwal[key] = { jam: times[0], ruang };
+    }
+  });
+
+  return jadwal;
+}
+
+function findVal(text, regex) {
+  const m = text.match(regex);
+  return m ? (m[1]||m[0]).trim() : null;
+}
+function clean(s) { return s.replace(/\s+/g,' ').trim(); }
 </script>
 </body>
 </html>
