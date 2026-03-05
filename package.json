@@ -1,9 +1,0 @@
-
-{
-  "name": "jadwalumk",
-  "version": "1.0.0",
-  "description": "Website jadwal UMK sederhana",
-  "scripts": {
-    "start": "npx serve ."
-  }
-}
