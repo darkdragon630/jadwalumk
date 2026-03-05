@@ -1,0 +1,27 @@
+[package]
+name = "jadwalumk"
+version = "0.1.0"
+description = "Jadwal Kuliah UMK — AI PDF Parser"
+
+[[module]]
+name = "server"
+source = "server.js"
+
+[module.env]
+# ANTHROPIC_API_KEY di-set lewat Wasmer dashboard
+# App Settings → Environment Variables → tambahkan ANTHROPIC_API_KEY
+
+[[command]]
+name = "server"
+module = "server"
+runner = "winterjs"
+
+[command.annotations.winterjs]
+entrypoint = "server.js"
+
+[[static_files]]
+name = "static"
+path = "."
+
+[deploy]
+app-name = "jadwalumk"
