@@ -1,7 +1,7 @@
 {
-  "name": "jadwal-umk",
+  "name": "jadwalumk",
   "version": "1.0.0",
-  "description": "Jadwal Kuliah UMK dengan AI parser PDF",
+  "description": "Jadwal Kuliah UMK",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
