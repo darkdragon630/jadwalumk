@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Jadwal UMK</title>
+<style>
+body{font-family:Arial;background:#0f172a;color:white;margin:0;padding:20px}
+.card{background:#1e293b;padding:20px;border-radius:10px;margin-bottom:15px}
+button{padding:10px 15px;border:none;border-radius:6px;background:#38bdf8;color:black;cursor:pointer}
+a{color:#38bdf8;text-decoration:none}
+</style>
+</head>
+<body>
+
+<h1>📅 Jadwal UMK</h1>
+<a href="upload.html"><button>Upload Jadwal</button></a>
+
+<div id="jadwal"></div>
+
+<script>
+const data = JSON.parse(localStorage.getItem("jadwal_umk") || "[]");
+const container = document.getElementById("jadwal");
+
+if(data.length === 0){
+ container.innerHTML = "<p>Belum ada jadwal.</p>";
+}
+
+data.forEach((item,i)=>{
+ const div = document.createElement("div");
+ div.className="card";
+ div.innerHTML = `
+  <h3>${item.matkul}</h3>
+  <p>Hari: ${item.hari}</p>
+  <p>Jam: ${item.jam}</p>
+ `;
+ container.appendChild(div);
+});
+</script>
+
+</body>
+</html>
