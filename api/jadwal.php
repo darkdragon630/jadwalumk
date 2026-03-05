@@ -7,74 +7,10 @@ header('Access-Control-Allow-Headers: Content-Type');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 require_once __DIR__ . '/../config/database.php';
-
 $action = $_GET['action'] ?? '';
 
 try {
     $db = getDB();
-
-    // GET jadwal (JSON)
-    if ($action === 'get') {
-        $mhs = $db->query("SELECT * FROM mahasiswa ORDER BY id DESC LIMIT 1")->fetch();
-        if (!$mhs) { echo json_encode(['success' => true, 'data' => null]); exit; }
-        $stmt = $db->prepare("SELECT * FROM matakuliah WHERE mahasiswa_id = ? ORDER BY no_urut");
-        $stmt->execute([$mhs['id']]);
-        $matakuliah = [];
-        foreach ($stmt->fetchAll() as $mk) {
-            $matakuliah[] = [
-                'no'          => (int)$mk['no_urut'],
-                'kelas'       => $mk['kelas'],
-                'kode'        => $mk['kode'],
-                'nama'        => $mk['nama'],
-                'isPraktikum' => (bool)$mk['is_praktikum'],
-                'dosen'       => $mk['dosen'],
-                'sks'         => (int)$mk['sks'],
-                'jadwal' => [
-                    'sn' => $mk['jadwal_sn'] ? json_decode($mk['jadwal_sn'], true) : null,
-                    'sl' => $mk['jadwal_sl'] ? json_decode($mk['jadwal_sl'], true) : null,
-                    'rb' => $mk['jadwal_rb'] ? json_decode($mk['jadwal_rb'], true) : null,
-                    'km' => $mk['jadwal_km'] ? json_decode($mk['jadwal_km'], true) : null,
-                    'jm' => $mk['jadwal_jm'] ? json_decode($mk['jadwal_jm'], true) : null,
-                    'sb' => $mk['jadwal_sb'] ? json_decode($mk['jadwal_sb'], true) : null,
-                    'mg' => $mk['jadwal_mg'] ? json_decode($mk['jadwal_mg'], true) : null,
-                ],
-            ];
-        }
-        echo json_encode(['success' => true, 'data' => [
-            'mahasiswa'  => ['nama'=>$mhs['nama'],'nim'=>$mhs['nim'],'prodi'=>$mhs['prodi'],
-                             'dosenPA'=>$mhs['dosen_pa'],'sks'=>(int)$mhs['sks'],'semester'=>$mhs['semester']],
-            'matakuliah' => $matakuliah,
-            'dicetak'    => $mhs['dicetak'],
-        ]]);
-        exit;
-    }
-
-    // POST: simpan jadwal JSON
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save') {
-        $body = json_decode(file_get_contents('php://input'), true);
-        if (!isset($body['mahasiswa'], $body['matakuliah'])) {
-            http_response_code(400); echo json_encode(['success'=>false,'error'=>'Data tidak valid.']); exit;
-        }
-        $m = $body['mahasiswa'];
-        $db->beginTransaction();
-        $db->exec("DELETE FROM mahasiswa");
-        $db->prepare("INSERT INTO mahasiswa (nama,nim,prodi,dosen_pa,sks,semester,dicetak) VALUES (?,?,?,?,?,?,?)")
-           ->execute([$m['nama'],$m['nim'],$m['prodi'],$m['dosenPA'],(int)$m['sks'],$m['semester'],$body['dicetak']??date('d F Y')]);
-        $mhsId = $db->lastInsertId();
-        $ins = $db->prepare("INSERT INTO matakuliah
-            (mahasiswa_id,no_urut,kelas,kode,nama,is_praktikum,dosen,sks,
-             jadwal_sn,jadwal_sl,jadwal_rb,jadwal_km,jadwal_jm,jadwal_sb,jadwal_mg)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-        foreach ($body['matakuliah'] as $mk) {
-            $j = $mk['jadwal'] ?? [];
-            $enc = fn($k) => (!empty($j[$k])&&is_array($j[$k])) ? json_encode($j[$k]) : null;
-            $ins->execute([$mhsId,(int)$mk['no'],$mk['kelas'],$mk['kode'],$mk['nama'],
-                           $mk['isPraktikum']?1:0,$mk['dosen'],(int)$mk['sks'],
-                           $enc('sn'),$enc('sl'),$enc('rb'),$enc('km'),$enc('jm'),$enc('sb'),$enc('mg')]);
-        }
-        $db->commit();
-        echo json_encode(['success'=>true]); exit;
-    }
 
     // POST: simpan API key
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_key') {
@@ -87,12 +23,6 @@ try {
         echo json_encode(['success'=>true]); exit;
     }
 
-    // GET: cek ada API key
-    if ($action === 'has_key') {
-        $row = $db->query("SELECT `value` FROM settings WHERE `key`='gemini_api_key'")->fetch();
-        echo json_encode(['success'=>true,'has_key'=>(bool)$row]); exit;
-    }
-
     // GET: ambil API key
     if ($action === 'get_key') {
         $row = $db->query("SELECT `value` FROM settings WHERE `key`='gemini_api_key'")->fetch();
@@ -100,23 +30,21 @@ try {
         echo json_encode(['success'=>true,'key'=>$row['value']]); exit;
     }
 
-    // POST: simpan data jadwal sebagai JS object string
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_data') {
+    // POST: simpan HTML jadwal
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_html') {
         $body = json_decode(file_get_contents('php://input'), true);
-        $jsData = trim($body['data'] ?? '');
-        if (!$jsData) {
-            http_response_code(400); echo json_encode(['success'=>false,'error'=>'Data kosong.']); exit;
+        $html = trim($body['html'] ?? '');
+        if (strlen($html) < 500) {
+            http_response_code(400); echo json_encode(['success'=>false,'error'=>'HTML terlalu pendek / kosong.']); exit;
         }
-        $db->prepare("INSERT INTO settings (`key`,`value`) VALUES ('jadwal_data',?) ON DUPLICATE KEY UPDATE `value`=?")
-           ->execute([$jsData, $jsData]);
+        $db->prepare("INSERT INTO settings (`key`,`value`) VALUES ('jadwal_html',?) ON DUPLICATE KEY UPDATE `value`=?")->execute([$html,$html]);
         echo json_encode(['success'=>true]); exit;
     }
 
-    // GET: ambil data jadwal JS object
-    if ($action === 'get_data') {
-        $row = $db->query("SELECT `value` FROM settings WHERE `key`='jadwal_data'")->fetch();
-        if (!$row) { echo json_encode(['success'=>false,'data'=>null]); exit; }
-        echo json_encode(['success'=>true,'data'=>$row['value']]); exit;
+    // GET: cek ada HTML tersimpan
+    if ($action === 'has_html') {
+        $row = $db->query("SELECT `value` FROM settings WHERE `key`='jadwal_html'")->fetch();
+        echo json_encode(['success'=>true,'has_html'=>(bool)$row]); exit;
     }
 
     http_response_code(404);

@@ -1,11 +1,8 @@
 <?php
 require_once __DIR__ . '/config/database.php';
-
-// Ambil status API key dari DB
-$db = getDB();
-$keyRow   = $db->query("SELECT `value` FROM settings WHERE `key`='gemini_api_key'")->fetch();
-$hasKey   = (bool)$keyRow;
-$geminiKey = $keyRow['value'] ?? '';
+$db     = getDB();
+$keyRow = $db->query("SELECT `value` FROM settings WHERE `key`='gemini_api_key'")->fetch();
+$hasKey = (bool)$keyRow;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -16,11 +13,7 @@ $geminiKey = $keyRow['value'] ?? '';
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-:root {
-  --navy:#0d1f3c; --gold:#d4a030; --gold-light:#f5c842;
-  --bg:#f0f2f7; --white:#fff; --border:#e2e6f0;
-  --text:#1a2540; --muted:#7a84a0; --green:#1e7a45; --red:#9c2c2c;
-}
+:root { --navy:#0d1f3c; --gold:#d4a030; --gold-light:#f5c842; --bg:#f0f2f7; --white:#fff; --border:#e2e6f0; --text:#1a2540; --muted:#7a84a0; --green:#1e7a45; --red:#9c2c2c; }
 body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 16px; }
 .card { background:var(--white); border:1px solid var(--border); border-radius:24px; padding:44px 40px; max-width:520px; width:100%; box-shadow:0 8px 48px rgba(13,31,60,.10); animation:up .45s ease both; }
 @keyframes up { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
@@ -29,20 +22,17 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 .top-text h1 { font-size:17px; font-weight:800; color:var(--navy); }
 .top-text p { font-size:12px; color:var(--muted); margin-top:2px; }
 .back-link { margin-left:auto; font-size:12px; font-weight:600; color:var(--muted); text-decoration:none; display:flex; align-items:center; gap:5px; }
-.back-link:hover { color:var(--navy); }
 .badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; padding:5px 12px; border-radius:20px; margin-bottom:20px; }
 .badge.green { background:#edfaf3; border:1px solid #a0e0c0; color:#0d5c32; }
-.badge.blue  { background:#e8f0fe; border:1px solid #aac4ff; color:#1a3a8f; }
+.badge.blue { background:#e8f0fe; border:1px solid #aac4ff; color:#1a3a8f; }
 .api-section { margin-bottom:18px; }
 .api-label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:7px; display:flex; align-items:center; justify-content:space-between; }
 .api-label a { font-size:11px; font-weight:700; color:#1a73e8; text-decoration:none; text-transform:none; letter-spacing:0; }
-.api-label a:hover { text-decoration:underline; }
 .api-input-wrap { display:flex; gap:8px; }
-.api-input { flex:1; padding:11px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; color:var(--text); background:var(--bg); outline:none; transition:border .2s; }
+.api-input { flex:1; padding:11px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; color:var(--text); background:var(--bg); outline:none; }
 .api-input:focus { border-color:var(--gold); background:var(--white); }
 .api-input.saved { border-color:#a0e0c0; background:#f0fdf7; }
 .api-save-btn { padding:11px 16px; background:var(--navy); color:#fff; border:none; border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
-.api-save-btn:hover { background:#1a3260; }
 .api-status { font-size:11px; margin-top:6px; min-height:16px; }
 .api-status.ok { color:var(--green); }
 .api-status.err { color:var(--red); }
@@ -64,10 +54,10 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 .fp-size { font-size:11px; color:var(--muted); margin-top:2px; }
 .fp-remove { margin-left:auto; background:none; border:none; cursor:pointer; color:var(--muted); padding:4px; }
 .btn { width:100%; padding:15px; border-radius:12px; border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:700; background:var(--navy); color:#fff; margin-top:18px; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px; }
-.btn:hover:not(:disabled) { background:#1a3260; transform:translateY(-1px); box-shadow:0 6px 20px rgba(13,31,60,.2); }
+.btn:hover:not(:disabled) { background:#1a3260; transform:translateY(-1px); }
 .btn:disabled { opacity:.5; cursor:not-allowed; }
 .btn.success { background:var(--green); }
-.status-box { display:none; margin-top:16px; border-radius:12px; padding:14px 16px; font-size:13px; line-height:1.6; }
+.status-box { display:none; margin-top:16px; border-radius:12px; padding:14px 16px; font-size:13px; line-height:1.6; word-break:break-word; }
 .status-box.show { display:block; }
 .status-box.error { background:#fff0f0; border:1px solid #ffc0c0; color:#8b0000; }
 .status-box.ok { background:#edfaf3; border:1px solid #a0e0c0; color:#0d5c32; }
@@ -82,7 +72,7 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 .step.done:not(:last-child)::after { background:var(--gold); }
 .step-circle { width:28px; height:28px; border-radius:50%; background:var(--border); color:var(--muted); font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin:0 auto 6px; position:relative; z-index:1; transition:all .3s; }
 .step.done .step-circle { background:var(--gold); color:var(--navy); }
-.step.active .step-circle { background:var(--navy); color:#fff; box-shadow:0 0 0 3px rgba(13,31,60,.15); }
+.step.active .step-circle { background:var(--navy); color:#fff; }
 .step-label { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
 .step.done .step-label, .step.active .step-label { color:var(--text); }
 </style>
@@ -102,19 +92,12 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
   </div>
 
   <?php if ($hasKey): ?>
-  <div class="badge green">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-    API key tersimpan di server — siap dipakai
-  </div>
+  <div class="badge green">✓ API key tersimpan — siap dipakai</div>
   <?php else: ?>
-  <div class="badge blue">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    Set API key Gemini — cukup sekali, tersimpan di server
-  </div>
+  <div class="badge blue">⚠ Set API key Gemini dulu</div>
   <?php endif; ?>
 
-  <!-- API KEY — hanya tampil jika belum ada -->
-  <div class="api-section" id="apiSection" <?= $hasKey ? 'style="display:none"' : '' ?>>
+  <div class="api-section" <?= $hasKey ? 'style="display:none"' : '' ?> id="apiSection">
     <div class="api-label">
       Google Gemini API Key
       <a href="https://aistudio.google.com/app/apikey" target="_blank">Dapatkan gratis →</a>
@@ -124,23 +107,21 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
       <button class="api-save-btn" onclick="saveApiKey()">Simpan</button>
     </div>
     <div class="api-status" id="apiStatus"></div>
-    <div class="hint" id="keyHint">
+    <div class="hint">
       <strong>🔑 Cara dapat API key gratis:</strong>
       <ol>
-        <li>Klik <b>"Dapatkan gratis →"</b> di atas</li>
-        <li>Login dengan akun Google personal (Gmail)</li>
-        <li>Klik <b>"Create API key"</b></li>
-        <li>Copy key → paste di sini → Simpan</li>
+        <li>Klik "Dapatkan gratis →" di atas (pakai Gmail biasa)</li>
+        <li>Klik "Create API key" → copy → paste di sini → Simpan</li>
       </ol>
     </div>
   </div>
   <?php if ($hasKey): ?>
   <p style="font-size:11px;color:var(--muted);margin-bottom:16px;">
-    <a href="#" onclick="document.getElementById('changeKeySection').style.display='block';this.style.display='none';return false;" style="color:var(--muted);">Ganti API key</a>
+    <a href="#" onclick="document.getElementById('changeKey').style.display='block';return false;" style="color:var(--muted);">Ganti API key</a>
   </p>
-  <div id="changeKeySection" style="display:none;margin-bottom:18px;">
+  <div id="changeKey" style="display:none;margin-bottom:16px;">
     <div class="api-input-wrap">
-      <input type="password" id="apiKeyInput" class="api-input" placeholder="AIzaSy..." autocomplete="off" />
+      <input type="password" id="apiKeyInput" class="api-input" placeholder="AIzaSy..." autocomplete="off"/>
       <button class="api-save-btn" onclick="saveApiKey()">Simpan</button>
     </div>
     <div class="api-status" id="apiStatus"></div>
@@ -151,13 +132,13 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 
   <div class="steps">
     <div class="step active" id="s1"><div class="step-circle">1</div><div class="step-label">Pilih PDF</div></div>
-    <div class="step" id="s2"><div class="step-circle">2</div><div class="step-label">AI Baca</div></div>
+    <div class="step" id="s2"><div class="step-circle">2</div><div class="step-label">Generate</div></div>
     <div class="step" id="s3"><div class="step-circle">3</div><div class="step-label">Tersimpan</div></div>
   </div>
 
   <div style="margin-top:20px">
     <div class="drop-zone" id="dropZone">
-      <input type="file" id="fileInput" accept=".pdf" />
+      <input type="file" id="fileInput" accept=".pdf"/>
       <div class="dz-icon">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a030" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
       </div>
@@ -183,7 +164,7 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:v
 
   <button class="btn" id="uploadBtn" disabled onclick="processUpload()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    Proses &amp; Simpan Jadwal
+    Generate &amp; Simpan Jadwal
   </button>
 </div>
 
@@ -192,143 +173,276 @@ const HAS_KEY = <?= $hasKey ? 'true' : 'false' ?>;
 const GEMINI_MODEL = 'gemini-2.5-flash';
 let selectedFile = null;
 
-// ── API Key ──
 async function saveApiKey() {
   const inp = document.getElementById('apiKeyInput');
-  const key = (inp ? inp.value.trim() : '');
-  if (!key.startsWith('AIza')) {
-    setApiStatus('err', '✗ Format tidak valid (harus diawali AIza...)'); return;
-  }
-  const r = await fetch('api/jadwal.php?action=save_key', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({key})
-  });
+  const key = inp ? inp.value.trim() : '';
+  if (!key.startsWith('AIza')) { setApiStatus('err','✗ Format tidak valid'); return; }
+  const r = await fetch('api/jadwal.php?action=save_key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})});
   const d = await r.json();
   if (d.success) {
-    setApiStatus('ok', '✓ API key tersimpan di server');
-    document.getElementById('apiSection') && (document.getElementById('apiSection').style.display='none');
-    document.getElementById('changeKeySection') && (document.getElementById('changeKeySection').style.display='none');
+    setApiStatus('ok','✓ Tersimpan');
+    ['apiSection','changeKey'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
     updateBtn(true);
-  } else {
-    setApiStatus('err', '✗ ' + d.error);
-  }
+  } else setApiStatus('err','✗ '+d.error);
 }
-function setApiStatus(type, msg) {
-  const el = document.getElementById('apiStatus');
-  if (!el) return;
-  el.className = 'api-status ' + type; el.textContent = msg;
-}
+function setApiStatus(t,m){const e=document.getElementById('apiStatus');if(e){e.className='api-status '+t;e.textContent=m;}}
 
-// ── File ──
-const dz = document.getElementById('dropZone');
-const fi = document.getElementById('fileInput');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
-dz.addEventListener('drop', e => {
-  e.preventDefault(); dz.classList.remove('drag');
-  const f = e.dataTransfer.files[0];
-  if (f?.type === 'application/pdf') setFile(f);
-  else showStatus('error', 'Harap upload file PDF yang valid.');
-});
-fi.addEventListener('change', () => { if (fi.files[0]) setFile(fi.files[0]); });
-document.getElementById('fpRemove').addEventListener('click', clearFile);
+const dz=document.getElementById('dropZone'),fi=document.getElementById('fileInput');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');const f=e.dataTransfer.files[0];if(f?.type==='application/pdf')setFile(f);else showStatus('error','Harap upload file PDF.');});
+fi.addEventListener('change',()=>{if(fi.files[0])setFile(fi.files[0]);});
+document.getElementById('fpRemove').addEventListener('click',clearFile);
 
-function setFile(f) {
-  selectedFile = f;
-  document.getElementById('fpName').textContent = f.name;
-  document.getElementById('fpSize').textContent = (f.size/1024).toFixed(1)+' KB';
-  document.getElementById('filePreview').classList.add('show');
-  clearStatus(); setStep(1); updateBtn();
-}
-function clearFile() {
-  selectedFile = null; fi.value='';
-  document.getElementById('filePreview').classList.remove('show');
-  clearStatus(); setStep(0); updateBtn();
-}
-function updateBtn(keyOk) {
-  const ok = (keyOk !== undefined) ? keyOk : HAS_KEY;
-  document.getElementById('uploadBtn').disabled = !(selectedFile && ok);
-}
-function setStep(n) {
-  [1,2,3].forEach(i => {
-    const el = document.getElementById('s'+i);
-    el.classList.remove('active','done');
-    if (i < n+1) el.classList.add('done');
-    if (i === n+1) el.classList.add('active');
-  });
-}
-function showStatus(type, msg) {
-  const el = document.getElementById('statusBox');
-  el.className = 'status-box show '+type; el.innerHTML = msg;
-}
-function clearStatus() { document.getElementById('statusBox').className = 'status-box'; }
-function setProgress(pct, label) {
-  document.getElementById('progressWrap').classList.add('show');
-  document.getElementById('progressFill').style.width = pct+'%';
-  document.getElementById('progressPct').textContent = Math.round(pct)+'%';
-  if (label) document.getElementById('progressLabel').textContent = label;
-}
-function hideProgress() { document.getElementById('progressWrap').classList.remove('show'); }
-
-// ── Init button ──
+function setFile(f){selectedFile=f;document.getElementById('fpName').textContent=f.name;document.getElementById('fpSize').textContent=(f.size/1024).toFixed(1)+' KB';document.getElementById('filePreview').classList.add('show');clearStatus();setStep(1);updateBtn();}
+function clearFile(){selectedFile=null;fi.value='';document.getElementById('filePreview').classList.remove('show');clearStatus();setStep(0);updateBtn();}
+function updateBtn(k){const ok=k!==undefined?k:HAS_KEY;document.getElementById('uploadBtn').disabled=!(selectedFile&&ok);}
+function setStep(n){[1,2,3].forEach(i=>{const e=document.getElementById('s'+i);e.classList.remove('active','done');if(i<n+1)e.classList.add('done');if(i===n+1)e.classList.add('active');});}
+function showStatus(t,m){const e=document.getElementById('statusBox');e.className='status-box show '+t;e.innerHTML=m;}
+function clearStatus(){document.getElementById('statusBox').className='status-box';}
+function setProgress(p,l){document.getElementById('progressWrap').classList.add('show');document.getElementById('progressFill').style.width=p+'%';document.getElementById('progressPct').textContent=Math.round(p)+'%';if(l)document.getElementById('progressLabel').textContent=l;}
+function hideProgress(){document.getElementById('progressWrap').classList.remove('show');}
 updateBtn();
 
-// ══════════════════════════════
-//  MAIN: kirim PDF ke Gemini, simpan ke DB
-// ══════════════════════════════
+// ═══════════════════════════════════════════
 async function processUpload() {
   if (!selectedFile) return;
-
   const btn = document.getElementById('uploadBtn');
   btn.disabled = true; clearStatus(); setStep(2);
   setProgress(10, 'Membaca PDF...');
 
   try {
-    // 1. Ambil API key dari server
+    // Ambil API key dari server
     const keyRes = await fetch('api/jadwal.php?action=get_key');
     const keyData = await keyRes.json();
-    if (!keyData.success) throw new Error('API key belum diset. Masukkan API key Gemini terlebih dahulu.');
+    if (!keyData.success) throw new Error('API key belum diset.');
     const apiKey = keyData.key;
 
-    // 2. Convert PDF ke base64
     const base64 = await fileToBase64(selectedFile);
-    setProgress(30, 'Mengirim ke Gemini AI...');
+    setProgress(28, 'Mengirim ke Gemini AI...');
 
-    // 3. Prompt: minta Gemini output JS object persis format DEFAULT_DATA
-    // Kirim contoh data yang sudah benar (semester 4) sebagai referensi format
-    const EXAMPLE = `{
-  mahasiswa: {
-    nama: "Muhammad Burhanudin Syaifullah Azmi",
-    nim: "202451022",
-    prodi: "Teknik Informatika – S1",
-    dosenPA: "Ahmad Jazuli, S.Kom., M.Kom",
-    sks: 24,
-    semester: "Genap 2025/2026"
-  },
-  matakuliah: [
-    { no:1, kelas:"E", kode:"IFT406", nama:"Praktikum Pemrograman Mobile", isPraktikum:true,  dosen:"Aditya Akbar Riadis, Kom., M.Kom.", sks:1, jadwal:{sn:null,sl:null,rb:null,km:null,jm:{jam:"08:00–10:29",ruang:"I.3,04"},sb:null,mg:null} },
-    { no:2, kelas:"A", kode:"IFT408", nama:"Pengenalan Pola",              isPraktikum:false, dosen:"Endang Supriyatis, Kom, M.Kom",      sks:2, jadwal:{sn:null,sl:null,rb:{jam:"08:00–09:39",ruang:"J.4,11"},km:null,jm:null,sb:null,mg:null} },
-  ],
-  dicetak: "05 Maret 2026, 09.05"
-}`;
+    // ─── PROMPT ────────────────────────────────────────────────
+    // Strategi: Gemini HANYA disuruh baca PDF dan tulis ulang
+    // isinya ke dalam HTML yang sudah kita desain penuh.
+    // Kita tidak suruh dia "parse JSON" atau "ikuti template" —
+    // kita suruh dia "ini PDF, ini CSS kita, buatkan HTML-nya".
+    const PROMPT = `Kamu adalah konverter PDF jadwal kuliah UMK ke HTML.
 
-    const PROMPT = `Kamu membaca PDF jadwal kuliah dari Universitas Muria Kudus (UMK).
+PDF yang diberikan adalah jadwal kuliah dari Universitas Muria Kudus (UMK) Fakultas Teknik.
+Baca PDF tersebut dengan teliti, lalu hasilkan SATU FILE HTML LENGKAP yang menampilkan jadwal tersebut.
 
-TUGASMU: Baca PDF ini dan kembalikan data jadwal dalam format JavaScript object PERSIS seperti contoh di bawah. JANGAN tambahkan "const DATA =" atau apapun — kembalikan HANYA isi object-nya mulai dari { hingga }.
+=== DESAIN YANG HARUS DIHASILKAN ===
 
-CONTOH FORMAT OUTPUT (ini hanya contoh struktur, bukan datanya):
-${EXAMPLE}
+HTML harus menggunakan desain ini persis (copy CSS ini ke dalam <style>):
 
-ATURAN MEMBACA TABEL:
-Kolom tabel dari kiri ke kanan: No | Kls | Kode | Nama MK | Dosen | SKS | Sn | Sl | Rb | Km | Jm | Sb | Mg
-- Sn = Senin, Sl = Selasa, Rb = Rabu, Km = Kamis, Jm = Jumat, Sb = Sabtu, Mg = Minggu
-- Kolom hari berisi jam dan ruang, contoh "08.00-09.39 (J.4,11)" → jam:"08:00-09:39", ruang:"J.4,11"
-- Kolom hari KOSONG → null
-- Gunakan tanda "–" (en dash) untuk pemisah jam, bukan "-" (hyphen)
-- isPraktikum: true hanya jika nama mengandung kata "Praktikum"
-- Salin SEMUA baris tabel, tidak boleh ada yang terlewat
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Jadwal Kuliah – [NAMA MAHASISWA DARI PDF]</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#0d1f3c;--gold:#d4a030;--bg:#f0f2f7;--white:#fff;--border:#e2e6f0;--text:#1a2540;--muted:#7a84a0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;padding:32px 24px 60px}
+.wrap{max-width:1100px;margin:0 auto}
+.header{background:var(--navy);border-radius:16px;padding:28px 32px;display:flex;align-items:center;gap:18px;margin-bottom:16px}
+.hlogo{width:48px;height:48px;background:var(--gold);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:var(--navy);flex-shrink:0}
+.hinfo h1{font-size:15px;font-weight:700;color:#fff}
+.hinfo p{font-size:11px;font-weight:600;color:rgba(212,160,48,.8);margin-top:3px;text-transform:uppercase;letter-spacing:.08em}
+.hright{margin-left:auto;text-align:right}
+.hright .sem{font-size:14px;font-weight:700;color:var(--gold)}
+.hright .semlab{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em}
+.upload-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;text-decoration:none;font-size:11px;font-weight:600;padding:7px 14px;border-radius:8px;margin-top:8px}
+.infogrid{display:grid;grid-template-columns:2fr 1fr 1.5fr 1.5fr 60px;gap:10px;margin-bottom:24px}
+.icard{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.icard .lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.icard .val{font-size:13px;font-weight:700;color:var(--text);line-height:1.3}
+.icard.sks{background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.icard.sks .lbl{color:rgba(255,255,255,.4)}
+.icard.sks .val{font-size:26px;font-weight:800;color:var(--gold)}
+.sec{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sec h2{font-size:13px;font-weight:700;white-space:nowrap}
+.sec hr{flex:1;border:none;border-top:1px solid var(--border)}
+.sec .badge{background:var(--navy);color:#fff;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px}
+.tbl-wrap{overflow-x:auto;border-radius:14px;box-shadow:0 1px 16px rgba(13,31,60,.07);margin-bottom:28px}
+table{width:100%;border-collapse:collapse;background:var(--white);border-radius:14px;overflow:hidden;min-width:820px}
+thead tr.r1{background:var(--navy)}
+thead th{color:#fff;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.07em;padding:12px 12px;text-align:left;border-right:1px solid rgba(255,255,255,.06)}
+thead th.tc{text-align:center}
+thead th.day{background:#0f2a56;color:rgba(212,160,48,.85);font-size:9.5px;text-align:center;padding:12px 5px}
+thead th.sub{background:#14264e;font-size:9px;color:rgba(255,255,255,.4);font-weight:600;padding:6px 12px}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f5f7fd}
+tbody td{padding:10px 12px;vertical-align:middle;border-right:1px solid var(--border);font-size:13px}
+tbody td:last-child{border-right:none}
+tbody td.tc{text-align:center}
+.num{color:var(--muted);font-weight:700;font-size:12px}
+.kls{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;background:var(--navy);color:#fff;font-size:12px;font-weight:700}
+.kode{font-size:10px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:5px;display:inline-block;margin-bottom:2px}
+.mknama{font-size:13px;font-weight:600;line-height:1.3}
+.prak{font-size:9px;font-weight:700;text-transform:uppercase;color:#16736b;background:#e6f5f3;padding:2px 6px;border-radius:4px;display:inline-block;margin-top:2px}
+.dos{font-size:12px;color:#3a4a6a;line-height:1.4}
+.sksn{font-size:17px;font-weight:800;color:var(--gold);display:block;text-align:center}
+.pill{display:inline-block;border-radius:8px;padding:6px 8px;text-align:center;min-width:74px}
+.pill .pt{font-size:11px;font-weight:700;color:#fff;line-height:1.2}
+.pill .pr{font-size:9px;color:rgba(255,255,255,.7);margin-top:2px}
+td.dtd{text-align:center;padding:6px 4px}
+td.emp{text-align:center;color:#d0d5e5}
+.wgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:28px}
+.dcol{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.dhead{background:var(--navy);color:#fff;text-align:center;font-size:10px;font-weight:700;padding:9px 5px;text-transform:uppercase;letter-spacing:.06em}
+.dbody{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:48px}
+.wcard{border-radius:8px;padding:8px 10px}
+.wt{font-size:9px;font-weight:600;color:rgba(255,255,255,.6);margin-bottom:2px}
+.wn{font-size:11px;font-weight:700;color:#fff;line-height:1.3}
+.wr{font-size:9px;color:rgba(255,255,255,.6);margin-top:2px}
+.nocls{color:var(--muted);font-size:11px;text-align:center;padding:14px 0;font-style:italic}
+.foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding-top:18px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+.foot strong{color:var(--text)}
+@media(max-width:700px){.infogrid{grid-template-columns:1fr 1fr}.icard.sks{grid-column:span 2}.wgrid{grid-template-columns:repeat(3,1fr)}.header{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="wrap">
 
-WAJIB: Output HANYA JavaScript object literal (mulai { sampai }). Tidak ada teks lain, tidak ada markdown.`;
+  <!-- HEADER -->
+  <div class="header">
+    <div class="hlogo">UMK</div>
+    <div class="hinfo">
+      <h1>Universitas Muria Kudus — Fakultas Teknik</h1>
+      <p>Jadwal Kuliah · [PRODI DARI PDF]</p>
+    </div>
+    <div class="hright">
+      <div class="semlab">Semester</div>
+      <div class="sem">[SEMESTER DARI PDF]</div>
+      <a href="upload.php" class="upload-btn">↑ Upload Jadwal Baru</a>
+    </div>
+  </div>
+
+  <!-- INFO MAHASISWA -->
+  <div class="infogrid">
+    <div class="icard"><div class="lbl">Nama</div><div class="val">[NAMA DARI PDF]</div></div>
+    <div class="icard"><div class="lbl">NIM</div><div class="val">[NIM DARI PDF]</div></div>
+    <div class="icard"><div class="lbl">Program Studi</div><div class="val">[PRODI DARI PDF]</div></div>
+    <div class="icard"><div class="lbl">Dosen PA</div><div class="val">[DOSEN PA DARI PDF]</div></div>
+    <div class="icard sks"><div class="lbl">SKS</div><div class="val">[TOTAL SKS DARI PDF]</div></div>
+  </div>
+
+  <!-- TABEL JADWAL -->
+  <div class="sec"><h2>Tabel Jadwal</h2><hr><span class="badge">[JUMLAH MK] Matakuliah</span></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr class="r1">
+          <th class="tc" style="width:38px" rowspan="2">No.</th>
+          <th class="tc" style="width:42px" rowspan="2">Kls</th>
+          <th colspan="2">Matakuliah</th>
+          <th rowspan="2">Dosen</th>
+          <th class="tc" style="width:42px" rowspan="2">SKS</th>
+          <th colspan="7" class="tc" style="text-align:center">Jadwal</th>
+        </tr>
+        <tr class="r1">
+          <th class="sub" style="width:65px">Kode</th>
+          <th class="sub">Nama</th>
+          <th class="day" style="width:85px">Sn</th>
+          <th class="day" style="width:85px">Sl</th>
+          <th class="day" style="width:85px">Rb</th>
+          <th class="day" style="width:85px">Km</th>
+          <th class="day" style="width:85px">Jm</th>
+          <th class="day" style="width:48px">Sb</th>
+          <th class="day" style="width:48px">Mg</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ISI SETIAP BARIS DARI PDF, CONTOH FORMAT SATU BARIS: -->
+        <!--
+        <tr>
+          <td class="tc num">1</td>
+          <td class="tc"><span class="kls">E</span></td>
+          <td><span class="kode">IFT406</span></td>
+          <td><div class="mknama">PRAKTIKUM PEMROGRAMAN MOBILE</div><span class="prak">PRAKTIKUM</span></td>
+          <td><div class="dos">ADITYA AKBAR RIADIS, Kom., M.Kom.</div></td>
+          <td><span class="sksn">1</span></td>
+          <td class="emp">·</td>
+          <td class="emp">·</td>
+          <td class="emp">·</td>
+          <td class="emp">·</td>
+          <td class="dtd"><div class="pill" style="background:#2563a8"><div class="pt">08:00–10:29</div><div class="pr">I.3,04</div></div></td>
+          <td class="emp">·</td>
+          <td class="emp">·</td>
+        </tr>
+        -->
+        <!-- TULIS SEMUA BARIS DARI PDF DI SINI -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RINGKASAN MINGGUAN -->
+  <div class="sec"><h2>Ringkasan Mingguan</h2><hr></div>
+  <div class="wgrid">
+    <!-- Buat 6 kolom hari: SENIN, SELASA, RABU, KAMIS, JUMAT, SABTU -->
+    <!-- Contoh kolom dengan isi: -->
+    <!--
+    <div class="dcol">
+      <div class="dhead">SENIN</div>
+      <div class="dbody">
+        <div class="wcard" style="background:#7c3d9e">
+          <div class="wt">10:30–12:59</div>
+          <div class="wn">PRAKTIKUM PENGENALAN POLA</div>
+          <div class="wr">IFT410 · I.3,06</div>
+        </div>
+      </div>
+    </div>
+    -->
+    <!-- Kolom tanpa jadwal: -->
+    <!--
+    <div class="dcol">
+      <div class="dhead">SABTU</div>
+      <div class="dbody"><div class="nocls">Tidak ada kelas</div></div>
+    </div>
+    -->
+  </div>
+
+  <!-- FOOTER -->
+  <div class="foot">
+    <div>Dicetak: <strong>[TANGGAL CETAK DARI PDF]</strong> · Sumber: Kanal UMK</div>
+    <div style="text-align:right"><strong>[NAMA DOSEN PA]</strong><br>Dosen PA</div>
+  </div>
+
+</div>
+</body>
+</html>
+
+=== INSTRUKSI PENGISIAN ===
+
+BAGIAN HEADER & INFO:
+- Ganti semua [TEKS DALAM KURUNG] dengan data dari PDF
+- Nama, NIM, Prodi, Dosen PA, SKS, Semester → persis dari PDF
+
+BAGIAN TABEL (PALING PENTING):
+- Tulis SETIAP baris matakuliah dari PDF sebagai <tr>
+- Urutan kolom jadwal: Sn=Senin, Sl=Selasa, Rb=Rabu, Km=Kamis, Jm=Jumat, Sb=Sabtu, Mg=Minggu
+- Kolom hari ADA jadwal → <td class="dtd"><div class="pill" style="background:WARNA"><div class="pt">JAM</div><div class="pr">RUANG</div></div></td>
+- Kolom hari KOSONG → <td class="emp">·</td>
+- Warna pill per baris (urutan): #2563a8, #16736b, #7c3d9e, #b85c00, #1e7a45, #9c2c2c, #3d5fa8, #5a4a9e, #0d6b7a (lalu ulang dari awal)
+- isPraktikum → tampilkan <span class="prak">PRAKTIKUM</span>
+- Format jam: gunakan "–" (en dash), contoh: 08:00–10:29
+
+BAGIAN RINGKASAN MINGGUAN:
+- Buat tepat 6 div.dcol untuk: SENIN, SELASA, RABU, KAMIS, JUMAT, SABTU
+- Isi setiap kolom berdasarkan jadwal yang ada di tabel di atas
+- Sortir per hari berdasarkan jam mulai (terkecil duluan)
+- Warna wcard sama dengan warna pill di tabel
+
+OUTPUT:
+- Kembalikan HANYA HTML lengkap dari <!DOCTYPE html> sampai </html>
+- JANGAN ada markdown, backtick, atau teks penjelasan
+- JANGAN ada tag kosong tanpa isi
+- Pastikan HTML valid dan semua data dari PDF sudah tercantum`;
+    // ─────────────────────────────────────────────────────────
 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
     const response = await fetch(apiUrl, {
@@ -339,76 +453,59 @@ WAJIB: Output HANYA JavaScript object literal (mulai { sampai }). Tidak ada teks
           { inline_data: { mime_type: 'application/pdf', data: base64 } },
           { text: PROMPT }
         ]}],
-        generationConfig: { temperature: 0, maxOutputTokens: 8000 }
+        generationConfig: { temperature: 0, maxOutputTokens: 16000 }
       })
     });
 
-    setProgress(70, 'Memproses respons AI...');
+    setProgress(72, 'Menerima HTML dari AI...');
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       const msg = err.error?.message || `HTTP ${response.status}`;
-      if (msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED')) {
-        throw new Error('Quota Gemini habis. Coba lagi besok atau gunakan API key lain.');
-      }
+      if (msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED'))
+        throw new Error('Quota Gemini habis. Coba lagi besok atau ganti API key.');
       throw new Error(msg);
     }
 
     const aiResp = await response.json();
-    let raw = aiResp.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    // Bersihkan markdown jika ada
-    raw = raw.trim()
-      .replace(/^```javascript\s*/i,'').replace(/^```js\s*/i,'')
-      .replace(/^```\s*/i,'').replace(/\s*```$/i,'')
-      .replace(/^const\s+\w+\s*=\s*/,'')  // hapus "const DATA = "
-      .trim();
+    let html = aiResp.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-    setProgress(82, 'Memvalidasi & menyimpan...');
+    // Bersihkan kalau Gemini wrap dengan markdown
+    html = html.trim()
+      .replace(/^```html\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```$/i,'').trim();
 
-    // Validasi: coba eval dulu
-    let parsed;
-    try {
-      parsed = (new Function('return (' + raw + ')'))();
-    } catch(e) {
-      throw new Error('Format output AI tidak valid. Detail: ' + e.message + '\n\nOutput AI:\n' + raw.slice(0, 300));
+    if (!html.toLowerCase().includes('<!doctype') && !html.toLowerCase().includes('<html')) {
+      throw new Error('Output AI bukan HTML valid. Respons: ' + html.slice(0,200));
     }
 
-    if (!parsed?.mahasiswa || !Array.isArray(parsed?.matakuliah) || parsed.matakuliah.length === 0) {
-      throw new Error('Data jadwal kosong atau tidak valid. Coba upload ulang PDF.');
-    }
+    setProgress(88, 'Menyimpan ke server...');
 
-    // Simpan raw JS object string ke DB (bukan JSON, tapi JS literal)
-    const saveRes = await fetch('api/jadwal.php?action=save_data', {
+    const saveRes = await fetch('api/jadwal.php?action=save_html', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: raw })
+      body: JSON.stringify({ html })
     });
     const saveData = await saveRes.json();
-    if (!saveData.success) throw new Error('Gagal simpan ke database: ' + saveData.error);
+    if (!saveData.success) throw new Error('Gagal simpan: ' + saveData.error);
 
     setProgress(100, 'Selesai!');
     setStep(3);
-    showStatus('ok', `
-      <strong>✓ Jadwal tersimpan ke server!</strong><br>
-      <b>${parsed.matakuliah.length} matakuliah</b> · <b>${parsed.mahasiswa.nama}</b><br>
-      Semester: ${parsed.mahasiswa.semester}<br>
-      <span style="color:#555;font-size:12px">Bisa dibuka dari device manapun. Mengalihkan...</span>
-    `);
+    showStatus('ok','<strong>✓ Jadwal berhasil disimpan!</strong><br>Mengalihkan ke halaman jadwal...');
     btn.classList.add('success'); btn.innerHTML = '✓ Berhasil — Mengalihkan...';
-    setTimeout(() => { window.location.href = 'index.php'; }, 2200);
+    setTimeout(() => { window.location.href = 'index.php'; }, 1800);
 
   } catch(err) {
     hideProgress(); setStep(1);
-    showStatus('error', `<strong>Gagal.</strong><br>${err.message}`);
+    showStatus('error','<strong>Gagal.</strong><br>'+err.message);
     btn.disabled = false;
   }
 }
 
 function fileToBase64(file) {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result.split(',')[1]);
-    r.onerror = () => rej(new Error('Gagal membaca file.'));
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(',')[1]);
+    r.onerror=()=>rej(new Error('Gagal membaca file.'));
     r.readAsDataURL(file);
   });
 }
