@@ -20,7 +20,7 @@ if ($row && strlen($row['value']) > 500) {
 <title>Jadwal Kuliah – UMK</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-<?php echo file_get_contents(__DIR__ . '/jadwal_template.html') ? '' : ''; // just include css inline ?>
+<?php echo file_get_contents(__DIR__ . '/jadwal_template.php') ? '' : ''; // just include css inline ?>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
   --navy:#0d1f3c; --gold:#d4a030; --bg:#f0f2f7; --white:#fff;
